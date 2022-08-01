@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: itmobotics-gym
+Version: 0.0.1
+Summary: Package with gym enviroments from ITMO Robotics Lab
+Home-page: https://github.com/ITMORobotics/itmobotics_gym
+Author: TexnoMann
+Author-email: texnoman@itmo.ru
+License: MIT
+Download-URL: https://github.com/user/reponame/archive/v_01.tar.gz
+Project-URL: Bug Tracker, https://github.com/ITMORobotics/itmobotics_gym/issues
+Description: # itmobotics_gym
+        OpenAI gym enviroment with universal robots
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown

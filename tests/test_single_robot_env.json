@@ -1,0 +1,39 @@
+{
+    "robot":{
+        "urdf_filename": "tests/urdf/ur5e_pybullet.urdf",
+        "init_pose": [0.0, 0.0, 0.625],
+        "action_space": {
+            "type":"cart_twist",
+            "target_link": "ee_link",
+            "range_min": {
+                "orientation": -6.28,
+                "position": [-3.0,  -3.0, -3.0]
+            },
+            "range_max": {
+                "orientation": 6.28,
+                "position": [3.0,  3.0, 3.0]
+            }
+        },
+        "observation_space": {
+            "type_list":[
+                {
+                    "type":"joint_torques"
+                },
+                {
+                    "type":"joint_positions"
+                },
+                {
+                    "type":"cart_tf",
+                    "target_link": "ee_link"
+                }
+            ]
+        }
+
+    },
+    "world":{
+
+    },
+    "simulation":{
+
+    }
+}

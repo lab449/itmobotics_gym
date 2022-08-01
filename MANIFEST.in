@@ -1,0 +1,3 @@
+include src/itmobotics_gym/envs/*.json
+include README.md
+include LICENSE.txt
