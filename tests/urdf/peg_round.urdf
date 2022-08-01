@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<robot name="peg_round">
+  <link name="peg_link">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.5"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0225 0.0225 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin rpy="3.14159265359 0 0" xyz="-0.0225 0.0225 0"/>
+      <geometry>
+			  <mesh filename="meshes/peg/peg_round.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="orange">
+        <color rgba="1 0.6 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="3.14159265359 0 0" xyz="-0.0225 0.0225 0"/>
+      <geometry>
+	 	    <mesh filename="meshes/peg/peg_round.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+</robot>

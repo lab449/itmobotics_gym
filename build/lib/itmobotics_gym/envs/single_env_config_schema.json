@@ -1,0 +1,237 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "https://example.com/employee.schema.json",
+    "description": "Scheme for verification enviroment config",
+    "type": "object",
+    "properties": {
+        "robot":{
+            "type": "object",
+            "properties": {
+                "urdf_filename": {
+                    "type": "string"
+                },
+                "init_pose": {
+                    "type": "array",
+                    "items": {
+                        "type":"number",
+                        "minItems": 3,
+                        "maxItems": 3
+                    }
+                },
+                "init_rotation": {
+                    "type": "array",
+                    "items": {
+                        "type":"number",
+                        "minItems": 4,
+                        "maxItems": 4
+                    },
+                    "default": [1.0, 0.0, 0.0, 0.0]
+                },
+                "force_sensor_link":{
+                    "type": "string"
+                },
+                "action_space":{
+                    "oneOf":[
+                        {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "pattern": "joint"
+                                },
+                                "range_min":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                },
+                                "range_max":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                }
+                            },
+                            "required": ["type"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "pattern": "cart"
+                                },
+                                "target_link": {
+                                    "type": "string"                                        
+                                },
+                                "reference_link": {
+                                    "type": "string",
+                                    "default": "world"                                    
+                                },
+                                "range_min":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                },
+                                "range_max":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                }
+                            },
+                            "required": ["type", "target_link", "range_min", "range_max"]
+                        }
+                    ]
+                },
+                "oservation_space":{
+                    "type": "object",
+                    "properties": {
+                        "type_list":{
+                            "type": "array",
+                            "items": {
+                                "oneOf":[
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "pattern": "joint"
+                                            }
+                                        },
+                                        "required": ["type"]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "pattern": "cart"
+                                            },
+                                            "target_link": {
+                                                "type": "string"                                        
+                                            },
+                                            "reference_link": {
+                                                "type": "string",
+                                                "default": "world"                                    
+                                            }
+                                        },
+                                        "required": ["type", "target_link"]
+                                    }
+                                ]
+                            },
+                            "default": ["joint_positions", "cart_tf"]
+                        }
+                    },
+                    "required": ["type_list"]
+                    
+                },
+                "tools_list":{
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "parent_link": {
+                                "type": "string"
+                            },
+                            "urdf_filename": {
+                                "type": "string"
+                            },
+                            "init_pose": {
+                                "type": "array",
+                                "items": {
+                                    "type":"number",
+                                    "minItems": 3,
+                                    "maxItems": 3
+                                }
+                            },
+                            "init_rotation": {
+                                "type": "array",
+                                "items": {
+                                    "type":"number",
+                                    "minItems": 4,
+                                    "maxItems": 4
+                                },
+                                "default": [1.0, 0.0, 0.0, 0.0]
+                            }
+                        },
+                        "required": ["parent_link", "urdf_filename", "init_pose"]
+                    },
+                    "default": []
+                }
+            },
+            "required": ["urdf_filename", "init_pose", "action_space", "observation_space"]
+        },
+        "world":{
+            "type": "object",
+            "properties":{
+                "urdf_filename": {
+                    "type": "string",
+                    "default": "plane.urdf"
+                },
+                "world_objects":{
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type":"string"
+                            },
+                            "fixed":{
+                                "type":"boolean",
+                                "default": true
+                            },
+                            "save":{
+                                "type":"boolean",
+                                "default": false
+                            },
+                            "urdf_filename": {
+                                "type": "string"
+                            },
+                            "init_pose": {
+                                "type": "array",
+                                "items": {
+                                    "type":"number",
+                                    "minItems": 3,
+                                    "maxItems": 3
+                                }
+                            },
+                            "init_rotation": {
+                                "type": "array",
+                                "items": {
+                                    "type":"number",
+                                    "minItems": 4,
+                                    "maxItems": 4
+                                },
+                                "default": [1.0, 0.0, 0.0, 0.0]
+                            }
+                        },
+                        "required": ["urdf_filename", "init_pose"]
+                    },
+                    "default": []
+                }
+            }
+        },
+        "simulation":{
+            "type": "object",
+            "properties": {
+                "sim_time_scale":{
+                    "type": "number",
+                    "minimum": 1.0,
+                    "maximum": 1000.0,
+                    "default": 1.0
+                },
+                "time_step":{
+                    "type": "number",
+                    "minimum": 1e-6,
+                    "maximum": 1e-1,
+                    "default": 1e-2
+                }
+            }
+        }
+            
+    },
+    "required": ["robot", "world", "simulation"]
+    
+}
