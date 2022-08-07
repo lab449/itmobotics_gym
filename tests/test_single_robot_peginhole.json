@@ -3,10 +3,10 @@
         "urdf_filename": "tests/urdf/ur5e_pybullet.urdf",
         "init_state": [0.0, 0.0, 0.625, 0.0, 0.0, 0.0],
         "action_space": {
-            "type":"cart_twist",
+            "type": "cart_twist",
             "target_link": "ee_tool",
-            "range_min": [-3.0,  -3.0, -3.0, -5.0, -5.0, -5.0],
-            "range_max": [3.0,  3.0, 3.0, 5.0, 5.0, 5.0]
+            "range_min": [-3.0,  -3.0, -3.0, -1.0, -1.0, -1.0],
+            "range_max": [3.0,  3.0, 3.0, 1.0, 1.0, 1.0]
         },
         "observation_space": {
             "type_list":[
@@ -18,13 +18,19 @@
                 },
                 {
                     "type": "ee_tf",
-                    "target_link": "ee_tool",
+                    "target_link": "peg_target_link",
                     "target_model": "robot",
-                    "reference_model": "hole",
-                    "reference_link": "hole_target_link"
-
+                    "reference_model": "hole_round",
+                    "reference_link": "hole_link"
                 }
             ]
+        },
+        "tools":{
+            "peg_round":{
+                "root_link": "ee_tool",
+                "urdf_filename": "tests/urdf/peg_round.urdf",
+                "init_state": [0.0, 0.0, 0.05, 0.0, 0.0, 0.0]
+            }
         }
 
     },
@@ -35,13 +41,23 @@
                 "init_state": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 "save": true
             },
-            "hole":{
+            "hole_round":{
                 "urdf_filename": "tests/urdf/hole_round.urdf",
                 "init_state": [0.3, 0.0, 0.625, 0.0, 0.0, 0.0],
                 "random_state_variation": [0.1, 0.1, 0.0, 0.0],
                 "save": false
             }
+                
         }
+            
     },
-    "simulation": {}
+    "simulation": {},
+    "task": {
+        "peg": {
+            "tool_name": "peg_round" 
+        },
+        "hole": {
+            "object_name": "hole_round"
+        }
+    }
 }

@@ -10,22 +10,13 @@
                 "urdf_filename": {
                     "type": "string"
                 },
-                "init_pose": {
+                "init_state": {
                     "type": "array",
                     "items": {
                         "type":"number",
-                        "minItems": 3,
-                        "maxItems": 3
+                        "minItems": 6,
+                        "maxItems": 6
                     }
-                },
-                "init_rotation": {
-                    "type": "array",
-                    "items": {
-                        "type":"number",
-                        "minItems": 4,
-                        "maxItems": 4
-                    },
-                    "default": [1.0, 0.0, 0.0, 0.0]
                 },
                 "force_sensor_link":{
                     "type": "string"
@@ -52,14 +43,14 @@
                                     }
                                 }
                             },
-                            "required": ["type"]
+                            "required": ["type", "range_min", "range_max"]
                         },
                         {
                             "type": "object",
                             "properties": {
                                 "type": {
                                     "type": "string",
-                                    "pattern": "cart"
+                                    "pattern": "ee"
                                 },
                                 "target_link": {
                                     "type": "string"                                        
@@ -68,30 +59,38 @@
                                     "type": "string",
                                     "default": "world"                                    
                                 },
+                                "reference_model":{
+                                    "type": "string",
+                                    "default": ""
+                                },
                                 "range_min":{
                                     "type": "array",
                                     "items": {
                                         "type": "number"
-                                    }
+                                    },
+                                    "maxItems": 6,
+                                    "minItems": 6
                                 },
                                 "range_max":{
                                     "type": "array",
                                     "items": {
                                         "type": "number"
-                                    }
+                                    },
+                                    "maxItems": 6,
+                                    "minItems": 6
                                 }
                             },
                             "required": ["type", "target_link", "range_min", "range_max"]
                         }
                     ]
                 },
-                "oservation_space":{
+                "observation_space":{
                     "type": "object",
                     "properties": {
                         "type_list":{
                             "type": "array",
                             "items": {
-                                "oneOf":[
+                                "anyOf":[
                                     {
                                         "type": "object",
                                         "properties": {
@@ -107,10 +106,14 @@
                                         "properties": {
                                             "type": {
                                                 "type": "string",
-                                                "pattern": "cart"
+                                                "pattern": "ee"
                                             },
                                             "target_link": {
                                                 "type": "string"                                        
+                                            },
+                                            "reference_model": {
+                                                "type": "string",
+                                                "default": ""                                 
                                             },
                                             "reference_link": {
                                                 "type": "string",
@@ -118,6 +121,30 @@
                                             }
                                         },
                                         "required": ["type", "target_link"]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "pattern": "cart"
+                                            },
+                                            "target_model":{
+                                                "type": "string"
+                                            },
+                                            "target_link": {
+                                                "type": "string"                                        
+                                            },
+                                            "reference_model": {
+                                                "type": "string",
+                                                "default": ""                                 
+                                            },
+                                            "reference_link": {
+                                                "type": "string",
+                                                "default": "world"                                    
+                                            }
+                                        },
+                                        "required": ["type", "target_link", "target_model"]
                                     }
                                 ]
                             },
@@ -131,41 +158,34 @@
                     "required": ["type_list"]
                     
                 },
-                "tools_list":{
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "parent_link": {
-                                "type": "string"
-                            },
-                            "urdf_filename": {
-                                "type": "string"
-                            },
-                            "init_pose": {
-                                "type": "array",
-                                "items": {
-                                    "type":"number",
-                                    "minItems": 3,
-                                    "maxItems": 3
+                "tools":{
+                    "type": "object",
+                    "patternProperties": {
+                        "(.*?)":{
+                            "type": "object",
+                            "properties": {
+                                "root_link": {
+                                    "type": "string"
+                                },
+                                "urdf_filename": {
+                                    "type": "string"
+                                },
+                                "init_state": {
+                                    "type": "array",
+                                    "items": {
+                                        "type":"number"
+                                    },
+                                    "minItems": 6,
+                                    "maxItems": 6,
+                                    "default": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                                 }
                             },
-                            "init_rotation": {
-                                "type": "array",
-                                "items": {
-                                    "type":"number",
-                                    "minItems": 4,
-                                    "maxItems": 4
-                                },
-                                "default": [1.0, 0.0, 0.0, 0.0]
-                            }
-                        },
-                        "required": ["parent_link", "urdf_filename", "init_pose"]
-                    },
-                    "default": []
+                            "required": ["root_link", "urdf_filename", "init_state"]
+                        }
+                    }
                 }
             },
-            "required": ["urdf_filename", "init_pose", "action_space", "observation_space"]
+            "required": ["urdf_filename", "init_state", "action_space", "observation_space"]
         },
         "world":{
             "type": "object",
@@ -175,45 +195,47 @@
                     "default": "plane.urdf"
                 },
                 "world_objects":{
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type":"string"
-                            },
-                            "fixed":{
-                                "type":"boolean",
-                                "default": true
-                            },
-                            "save":{
-                                "type":"boolean",
-                                "default": false
-                            },
-                            "urdf_filename": {
-                                "type": "string"
-                            },
-                            "init_pose": {
-                                "type": "array",
-                                "items": {
-                                    "type":"number",
-                                    "minItems": 3,
-                                    "maxItems": 3
+                    "type": "object",
+                    "patternProperties": {
+                        "(.*?)":{
+                            "type": "object",
+                            "properties": {
+                                "fixed":{
+                                    "type":"boolean",
+                                    "default": true
+                                },
+                                "save":{
+                                    "type":"boolean",
+                                    "default": false
+                                },
+                                "urdf_filename": {
+                                    "type": "string"
+                                },
+                                "init_state": {
+                                    "type": "array",
+                                    "items": {
+                                        "type":"number"
+                                    },
+                                    "minItems": 6,
+                                    "maxItems": 6
+                                },
+                                "scale_size":{
+                                    "type": "number",
+                                    "default": 1.0
+                                },
+                                "random_state_variation": {
+                                    "type": "array",
+                                    "items":{
+                                        "type": "number"
+                                    },
+                                    "minItems": 4,
+                                    "maxItems": 4,
+                                    "default": [0.0, 0.0, 0.0, 0.0]
                                 }
                             },
-                            "init_rotation": {
-                                "type": "array",
-                                "items": {
-                                    "type":"number",
-                                    "minItems": 4,
-                                    "maxItems": 4
-                                },
-                                "default": [1.0, 0.0, 0.0, 0.0]
-                            }
-                        },
-                        "required": ["urdf_filename", "init_pose"]
-                    },
-                    "default": []
+                            "required": ["urdf_filename", "init_state"]
+                        }
+                    }
                 }
             }
         },

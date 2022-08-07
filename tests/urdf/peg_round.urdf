@@ -28,4 +28,16 @@
       </geometry>
     </collision>
   </link>
+  <link name="peg_target_link">
+    <inertial>
+      <mass value="0" />
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+    </inertial>
+  </link>
+  <joint name="peg_link-peg_target_link" type="fixed">
+    <parent link="peg_link"/>
+    <child link="peg_target_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
 </robot>
