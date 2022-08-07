@@ -3,7 +3,7 @@
         "urdf_filename": "tests/urdf/ur5e_pybullet.urdf",
         "init_state": [0.0, 0.0, 0.625, 0.0, 0.0, 0.0],
         "action_space": {
-            "type":"cart_twist",
+            "type":"ee_twist",
             "target_link": "ee_tool",
             "range_min": [-3.0,  -3.0, -3.0, -5.0, -5.0, -5.0],
             "range_max": [3.0,  3.0, 3.0, 5.0, 5.0, 5.0]
@@ -18,6 +18,13 @@
                 },
                 {
                     "type": "ee_tf",
+                    "target_link": "ee_tool",
+                    "reference_model": "hole",
+                    "reference_link": "hole_target_link"
+
+                },
+                {
+                    "type": "cart_tf",
                     "target_link": "ee_tool",
                     "target_model": "robot",
                     "reference_model": "hole",

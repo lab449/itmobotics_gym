@@ -18,9 +18,6 @@
                         "maxItems": 6
                     }
                 },
-                "force_sensor_link":{
-                    "type": "string"
-                },
                 "action_space":{
                     "oneOf":[
                         {
@@ -43,6 +40,7 @@
                                     }
                                 }
                             },
+                            "additionalProperties": false,
                             "required": ["type", "range_min", "range_max"]
                         },
                         {
@@ -80,6 +78,7 @@
                                     "minItems": 6
                                 }
                             },
+                            "additionalProperties": false,
                             "required": ["type", "target_link", "range_min", "range_max"]
                         }
                     ]
@@ -99,6 +98,7 @@
                                                 "pattern": "joint"
                                             }
                                         },
+                                        "additionalProperties": false,
                                         "required": ["type"]
                                     },
                                     {
@@ -120,6 +120,7 @@
                                                 "default": "world"                                    
                                             }
                                         },
+                                        "additionalProperties": false,
                                         "required": ["type", "target_link"]
                                     },
                                     {
@@ -144,6 +145,7 @@
                                                 "default": "world"                                    
                                             }
                                         },
+                                        "additionalProperties": false,
                                         "required": ["type", "target_link", "target_model"]
                                     }
                                 ]
@@ -155,6 +157,7 @@
                             ]
                         }
                     },
+                    "additionalProperties": false,
                     "required": ["type_list"]
                     
                 },
@@ -180,11 +183,13 @@
                                     "default": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                                 }
                             },
+                            "additionalProperties": false,
                             "required": ["root_link", "urdf_filename", "init_state"]
                         }
                     }
                 }
             },
+            "additionalProperties": false,
             "required": ["urdf_filename", "init_state", "action_space", "observation_space"]
         },
         "world":{
@@ -233,6 +238,7 @@
                                     "default": [0.0, 0.0, 0.0, 0.0]
                                 }
                             },
+                            "additionalProperties": false,
                             "required": ["urdf_filename", "init_state"]
                         }
                     }

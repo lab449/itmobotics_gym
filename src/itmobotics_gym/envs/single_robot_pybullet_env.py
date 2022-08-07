@@ -12,7 +12,7 @@ import numpy as np
 
 import pybullet as p
 import itmobotics_sim as isim
-from itmobotics_sim.utils.robot import EEState, JointState, Motion, eestate_transform
+from itmobotics_sim.utils.robot import EEState, JointState, Motion
 from itmobotics_sim.pybullet_env.pybullet_world import PyBulletWorld, GUI_MODE
 from itmobotics_sim.pybullet_env.pybullet_robot import PyBulletRobot
 from itmobotics_sim.utils.math import vec2SE3, SE32vec
@@ -49,7 +49,7 @@ class SingleRobotPyBulletEnv(gym.Env):
         'joint_positions': ctrl.JointPositionsController,
         'joint_velocities': ctrl.JointVelocitiesController,
         'joint_torques': ctrl.JointTorquesController,
-        'cart_twist': ctrl.CartVelocityToJointVelocityController
+        'ee_twist': ctrl.EEVelocityToJointVelocityController
     }
 
 
@@ -91,6 +91,18 @@ class SingleRobotPyBulletEnv(gym.Env):
                 -1e1*np.ones(self._robot.num_joints),
                 1e1*np.ones(self._robot.num_joints)
             ),
+            'ee_tf': (
+                np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)]),
+                np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)])
+            ),
+            'ee_twist': (
+                -5e1*np.ones(6),                           
+                5e1*np.ones(6)
+            ),
+            'ee_force_torque': (
+                np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)]),
+                np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)])
+            ),
             'cart_tf': (
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)]),
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)])
@@ -107,7 +119,9 @@ class SingleRobotPyBulletEnv(gym.Env):
         observation_space_range_min = []
         observation_space_range_max = []
         for state in self._env_config['robot']['observation_space']['type_list']:
-            assert state['type'] in self._state_references, "Unknown type for observable state: {:s}, expecten one of this: {:s}".format(state['type'], list(self._state_references.keys()))
+            assert state['type'] in self._state_references, "Unknown type for observable state: {:s}, expecten one of this: {:s}".format(
+                state['type'], str(list(self._state_references.keys()))
+            )
             observation_space_range_min.append(self._state_references[state['type']][0])
             observation_space_range_max.append(self._state_references[state['type']][1])
 
@@ -124,14 +138,18 @@ class SingleRobotPyBulletEnv(gym.Env):
                 part_of_state = None
                 if 'joint' in state_type['type']:
                     part_of_state = getattr(self._robot.joint_state, state_type['type'])
-                else:
+                elif 'ee' in state_type['type']:
                     robot_ee_state = self._robot.ee_state(state_type['target_link'])
-                    tf_in_to_reference = self._sim.link_tf(state_type['target_model'], state_type['target_link'], state_type['reference_model'], state_type['reference_link'])
-                    eestate_transform(robot_ee_state, tf_in_to_reference)
-                    part_of_state = getattr(robot_ee_state, state_type['type'].replace('cart_', ''))
+                    tf_in_to_reference = self._sim.link_state(
+                        state_type['reference_model'], state_type['reference_link'], "", "world"
+                    ).inv()
+                    part_of_state = getattr(robot_ee_state, state_type['type'].replace('ee_', ''))
+                    robot_ee_state.transform(tf_in_to_reference)
                     if 'tf' in state_type['type']:
-                        print(part_of_state)
                         part_of_state = SE32vec(part_of_state)
+                elif 'cart' in state_type['type']:
+                    tf_in_to_reference = self._sim.link_state(state_type['target_model'], state_type['target_link'], state_type['reference_model'], state_type['reference_link'])
+                    
                 full_state_vector = np.concatenate((full_state_vector, part_of_state))
         except AttributeError:
             raise AttributeError('Unknown observation state type with name: {:s}'.format(state_type['type']))
@@ -176,7 +194,10 @@ class SingleRobotPyBulletEnv(gym.Env):
     def __sample_random_objects(self):
         for object_name in self._env_config['world']['world_objects']:
             object_config = self._env_config['world']['world_objects'][object_name]
-            random_tf = self._sample_random_tf(np.array(object_config['init_state']), np.array(object_config['random_state_variation']))
+            random_tf = self._sample_random_tf(
+                np.array(object_config['init_state']),
+                np.array(object_config['random_state_variation'])
+            )
             self._sim.add_object(
                 object_name,
                 object_config['urdf_filename'],
