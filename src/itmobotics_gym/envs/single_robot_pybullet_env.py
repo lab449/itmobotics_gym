@@ -68,9 +68,9 @@ class SingleRobotPyBulletEnv(gym.Env):
         )
         self._robot = PyBulletRobot(
             self._env_config['robot']['urdf_filename'], 
-            vec2SE3(np.array(self._env_config['robot']['init_state']))
+            vec2SE3(np.array(self._env_config['robot']['mount_tf']))
         )
-        self._sim.add_robot(self._robot, name='robot')
+        self._sim.add_robot(self._robot, name=self._env_config['robot']['name'])
 
         self._action_robot_controller = SingleRobotPyBulletEnv.action_controller_builder[self._env_config['robot']['action_space']['type']](self._robot)
         self.action_space = gym.spaces.box.Box(
@@ -79,18 +79,9 @@ class SingleRobotPyBulletEnv(gym.Env):
         )
         
         self._state_references = {
-            'joint_positions': (
-                -3.1457*np.ones(self._robot.num_joints),
-                3.1457*np.ones(self._robot.num_joints)
-            ),
-            'joint_torques': (
-                -1e3*np.ones(self._robot.num_joints),
-                1e3*np.ones(self._robot.num_joints)
-            ),
-            'joint_velocities': (
-                -1e1*np.ones(self._robot.num_joints),
-                1e1*np.ones(self._robot.num_joints)
-            ),
+            'joint_positions': self._robot.joint_limits.limit_positions,
+            'joint_velocities': self._robot.joint_limits.limit_velocities,
+            'joint_torques': self._robot.joint_limits.limit_torques,
             'ee_tf': (
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)]),
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)])
@@ -138,35 +129,35 @@ class SingleRobotPyBulletEnv(gym.Env):
                 part_of_state = None
                 if 'joint' in state_type['type']:
                     part_of_state = getattr(self._robot.joint_state, state_type['type'])
-                elif 'ee' in state_type['type']:
-                    robot_ee_state = self._robot.ee_state(state_type['target_link'])
-                    tf_in_to_reference = self._sim.link_state(
-                        state_type['reference_model'], state_type['reference_link'], "", "world"
-                    ).inv()
-                    part_of_state = getattr(robot_ee_state, state_type['type'].replace('ee_', ''))
-                    robot_ee_state.transform(tf_in_to_reference)
-                    if 'tf' in state_type['type']:
-                        part_of_state = SE32vec(part_of_state)
                 elif 'cart' in state_type['type']:
-                    tf_in_to_reference = self._sim.link_state(state_type['target_model'], state_type['target_link'], state_type['reference_model'], state_type['reference_link'])
-                    
+                    link_state = self._sim.link_state(
+                        state_type['target_model'],
+                        state_type['target_link'],
+                        state_type['reference_model'],
+                        state_type['reference_link']
+                    )
+                    part_of_state = getattr(link_state, state_type['type'].replace('cart_', ''))
+                else:
+                    raise RuntimeError('Unknown observation state type with name')
+                if 'tf' in state_type['type']:
+                    part_of_state = SE32vec(part_of_state)
                 full_state_vector = np.concatenate((full_state_vector, part_of_state))
         except AttributeError:
             raise AttributeError('Unknown observation state type with name: {:s}'.format(state_type['type']))
         return full_state_vector
     
-    def _sample_random_tf(self, init_state: np.ndarray, random_variation: np.ndarray) -> SO3:
+    def _sample_random_tf(self, init_tf: np.ndarray, random_variation: np.ndarray) -> SO3:
         pose_variation = (2*self._np_random.random(3) - 1.0)*random_variation[:3]
-        random_pose = SE3(*( (init_state[:3] + pose_variation).tolist()) )
+        random_pose = SE3(*( (init_tf[:3] + pose_variation).tolist()) )
 
         var_theta = random_variation[3]
         theta_orient_variation = (2*self._np_random.random() - 1.0) * var_theta
         vec_orient_variation = (2*self._np_random.random(3) - 1.0)
         
         orient_variation = SE3(SO3(sb.angvec2r(theta=theta_orient_variation, v=vec_orient_variation), check = False))
-        only_rotation_init_state = init_state
-        only_rotation_init_state[:3] = 0.0
-        random_orient = orient_variation @  Twist3(only_rotation_init_state).SE3()        
+        only_rotation_init_tf = init_tf
+        only_rotation_init_tf[:3] = 0.0
+        random_orient = orient_variation @  Twist3(only_rotation_init_tf).SE3()        
         random_tf = random_pose @ random_orient
         return random_tf
     
@@ -181,7 +172,8 @@ class SingleRobotPyBulletEnv(gym.Env):
 
     def reset(self):
         self._sim.reset()
-        self.__sample_random_objects()
+        self._sample_random_objects()
+        self._sample_random_robot_state()
         
     def render(self, mode: str = 'human', close: bool = False):
         pass
@@ -191,12 +183,12 @@ class SingleRobotPyBulletEnv(gym.Env):
         # done = False
         # assert self.action_space.contains(action), "Invalid Action"
 
-    def __sample_random_objects(self):
+    def _sample_random_objects(self):
         for object_name in self._env_config['world']['world_objects']:
             object_config = self._env_config['world']['world_objects'][object_name]
             random_tf = self._sample_random_tf(
-                np.array(object_config['init_state']),
-                np.array(object_config['random_state_variation'])
+                np.array(object_config['init_tf']),
+                np.array(object_config['random_tf_variation'])
             )
             self._sim.add_object(
                 object_name,
@@ -206,3 +198,23 @@ class SingleRobotPyBulletEnv(gym.Env):
                 save = object_config['save'],
                 scale_size = object_config['scale_size']
             )
+    
+    def _sample_random_robot_state(self):
+        if 'joint_positions' == self._env_config['robot']['init_state']['type']:
+            new_init_state = self._env_config['robot']['init_state']['value']
+            assert len(new_init_state) == self._robot.num_joints, "Invalid size of robots init_state value. The robot has a different number of joints"
+            partialy_fill_random_joint_state = np.zeros(self._robot.num_joints)
+            config_random_variation = np.array(self._env_config['robot']['init_state']['random_variation'])
+            partialy_fill_random_joint_state[:config_random_variation.shape[0]] = config_random_variation
+            random_joint_state = (2*self._np_random.random(self._robot.num_joints) - 1.0)*partialy_fill_random_joint_state
+            
+            new_js = JointState.from_position(self._env_config['robot']['init_state']['value'] +  random_joint_state)
+            self._robot.reset_joint_state(new_js)
+
+        elif 'ee_tf' == self._env_config['robot']['init_state']['type']:
+            new_tf = self._sample_random_tf(
+                np.array(self._env_config['robot']['init_state']['value']),
+                np.array(self._env_config['robot']['init_state']['random_variation'])
+            )
+            new_eestate = EEState.from_tf(new_tf, self._env_config['robot']['init_state']['target_link'])
+            self._robot.reset_ee_state(new_eestate)

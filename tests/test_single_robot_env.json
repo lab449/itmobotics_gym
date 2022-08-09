@@ -1,7 +1,14 @@
 {
     "robot":{
+        "name": "robot",
         "urdf_filename": "tests/urdf/ur5e_pybullet.urdf",
-        "init_state": [0.0, 0.0, 0.625, 0.0, 0.0, 0.0],
+        "mount_tf": [0.0, 0.0, 0.625, 0.0, 0.0, 0.0],
+        "init_state": {
+            "type": "ee_tf",
+            "value": [0.4, 0.1, 0.75, 3.1415, 0.0, 0.0],
+            "random_variation": [0.1, 0.1, 0.0, 0.0],
+            "target_link": "ee_tool"
+        },
         "action_space": {
             "type":"ee_twist",
             "target_link": "ee_tool",
@@ -10,26 +17,14 @@
         },
         "observation_space": {
             "type_list":[
-                {
-                    "type": "joint_torques"
-                },
-                {
-                    "type": "joint_positions"
-                },
-                {
-                    "type": "ee_tf",
-                    "target_link": "ee_tool",
-                    "reference_model": "hole",
-                    "reference_link": "hole_target_link"
-
-                },
+                {"type": "joint_torques"},
+                {"type": "joint_positions"},
                 {
                     "type": "cart_tf",
                     "target_link": "ee_tool",
                     "target_model": "robot",
                     "reference_model": "hole",
                     "reference_link": "hole_target_link"
-
                 }
             ]
         }
@@ -39,13 +34,13 @@
         "world_objects":{
             "table":{
                 "urdf_filename": "tests/urdf/table.urdf",
-                "init_state": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "init_tf": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 "save": true
             },
             "hole":{
                 "urdf_filename": "tests/urdf/hole_round.urdf",
-                "init_state": [0.3, 0.0, 0.625, 0.0, 0.0, 0.0],
-                "random_state_variation": [0.1, 0.1, 0.0, 0.0],
+                "init_tf": [0.4, 0.1, 0.625, 0.0, 0.0, 0.0],
+                "random_tf_variation": [0.0, 0.0, 0.0, 0.0],
                 "save": false
             }
         }
