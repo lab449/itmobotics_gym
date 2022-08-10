@@ -14,12 +14,7 @@
                     "type": "string"
                 },
                 "mount_tf": {
-                    "type": "array",
-                    "items": {
-                        "type":"number"
-                    },
-                    "minItems": 6,
-                    "maxItems": 6
+                    "$ref": "#/$defs/tf_config"
                 },
                 "init_state":{
                     "oneOf":[
@@ -31,20 +26,10 @@
                                     "pattern": "ee_tf"
                                 },
                                 "value":{
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number"
-                                    },
-                                    "minItems": 6,
-                                    "maxItems": 6
+                                    "$ref": "#/$defs/tf_config"
                                 },
                                 "random_variation": {
-                                    "type": "array",
-                                    "items":{
-                                        "type": "number"
-                                    },
-                                    "minItems": 4,
-                                    "maxItems": 4,
+                                    "$ref": "#/$defs/random_tf_config",
                                     "default": [0.0, 0.0, 0.0, 0.0]
                                 },
                                 "target_link": {
@@ -124,20 +109,10 @@
                                     "default": ""
                                 },
                                 "range_min":{
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number"
-                                    },
-                                    "maxItems": 6,
-                                    "minItems": 6
+                                    "$ref": "#/$defs/tf_config"
                                 },
                                 "range_max":{
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number"
-                                    },
-                                    "maxItems": 6,
-                                    "minItems": 6
+                                    "$ref": "#/$defs/tf_config"
                                 }
                             },
                             "additionalProperties": false,
@@ -201,12 +176,14 @@
                     "required": ["type_list"]
                     
                 },
-                "tools":{
-                    "type": "object",
-                    "patternProperties": {
-                        "(.*?)":{
+                "tool":{
+                    "oneOf":[
+                        {
                             "type": "object",
                             "properties": {
+                                "name":{
+                                    "type": "string"
+                                },
                                 "root_link": {
                                     "type": "string"
                                 },
@@ -214,19 +191,47 @@
                                     "type": "string"
                                 },
                                 "mount_tf": {
-                                    "type": "array",
-                                    "items": {
-                                        "type":"number"
-                                    },
-                                    "minItems": 6,
-                                    "maxItems": 6,
+                                    "$ref": "#/$defs/tf_config",
                                     "default": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                                 }
                             },
                             "additionalProperties": false,
-                            "required": ["root_link", "urdf_filename", "mount_tf"]
+                            "required": ["name", "root_link", "urdf_filename", "mount_tf"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "name":{
+                                    "type": "string"
+                                },
+                                "random_tool":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name":{
+                                                "type": "string"
+                                            },
+                                            "root_link": {
+                                                "type": "string"
+                                            },
+                                            "urdf_filename": {
+                                                "type": "string"
+                                            },
+                                            "mount_tf": {
+                                                "$ref": "#/$defs/tf_config",
+                                                "default": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                                            }
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["name", "root_link", "urdf_filename", "mount_tf"]
+                                    }
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["name", "random_tool"]
                         }
-                    }
+                    ]
                 }
             },
             "additionalProperties": false,
@@ -257,24 +262,14 @@
                                     "type": "string"
                                 },
                                 "init_tf": {
-                                    "type": "array",
-                                    "items": {
-                                        "type":"number"
-                                    },
-                                    "minItems": 6,
-                                    "maxItems": 6
+                                    "$ref": "#/$defs/tf_config"
                                 },
                                 "scale_size":{
                                     "type": "number",
                                     "default": 1.0
                                 },
                                 "random_tf_variation": {
-                                    "type": "array",
-                                    "items":{
-                                        "type": "number"
-                                    },
-                                    "minItems": 4,
-                                    "maxItems": 4,
+                                    "$ref": "#/$defs/random_tf_config",
                                     "default": [0.0, 0.0, 0.0, 0.0]
                                 }
                             },
@@ -299,11 +294,35 @@
                     "minimum": 1e-6,
                     "maximum": 1e-1,
                     "default": 1e-2
+                },
+                "random_seed":{
+                    "type": "integer",
+                    "minimum": 0
                 }
             }
         }
             
     },
-    "required": ["robot", "world", "simulation"]
+    "additionalProperties": false,
+    "required": ["robot", "world", "simulation"],
     
+    "$defs": {
+        "random_tf_config": {
+            "type": "array",
+            "items":{
+                "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+        },
+        "tf_config": {
+            "type": "array",
+            "items":{
+                "type": "number"
+            },
+            "minItems": 6,
+            "maxItems": 6
+        }
+    }
 }
+

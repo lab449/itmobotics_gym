@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from json import tool
 import os
 import sys
 import time
@@ -55,7 +56,6 @@ class SingleRobotPyBulletEnv(gym.Env):
 
     def __init__(self, env_config: dict):
         super(SingleRobotPyBulletEnv, self).__init__()
-        self._np_random, self._seed = seeding.np_random(int(time.time()))
         self._env_config = env_config
         with open('src/itmobotics_gym/envs/single_env_config_schema.json') as json_file:
             env_schema = json.load(json_file)
@@ -70,30 +70,38 @@ class SingleRobotPyBulletEnv(gym.Env):
             self._env_config['robot']['urdf_filename'], 
             vec2SE3(np.array(self._env_config['robot']['mount_tf']))
         )
+
         self._sim.add_robot(self._robot, name=self._env_config['robot']['name'])
 
-        self._action_robot_controller = SingleRobotPyBulletEnv.action_controller_builder[self._env_config['robot']['action_space']['type']](self._robot)
+        tool_config = self._env_config['robot']['tool']
+        if isinstance(tool_config, dict):
+            self._robot.connect_tool(
+                tool_config['name'],
+                tool_config['urdf_filename'],
+                tool_config['root_link'],
+                tf=vec2SE3(tool_config['mount_tf']),
+                save=True
+            )
+
+        if 'random_seed' in self._env_config['simulation']:
+            self._np_random, self._seed = seeding.np_random(self._env_config['simulation']['random_seed'])
+        else:
+            self._np_random, self._seed = seeding.np_random(int(time.time()))
+
+        # Definition of the action space vector
+        self._controller_type = self._env_config['robot']['action_space']['type']
+        assert self._controller_type in SingleRobotPyBulletEnv.action_controller_builder, "Unknows controller type {:s}".format(self._controller_type)
+        self._action_robot_controller = SingleRobotPyBulletEnv.action_controller_builder[self._controller_type](self._robot)
         self.action_space = gym.spaces.box.Box(
             low=np.array(self._env_config['robot']['action_space']['range_min'], dtype=np.float32),
             high=np.array(self._env_config['robot']['action_space']['range_max'], dtype=np.float32)
         )
+        self._target_motion = Motion(ee_link = self._env_config['robot']['action_space']['target_link'], num_joints = self._robot.num_joints)
         
         self._state_references = {
             'joint_positions': self._robot.joint_limits.limit_positions,
             'joint_velocities': self._robot.joint_limits.limit_velocities,
             'joint_torques': self._robot.joint_limits.limit_torques,
-            'ee_tf': (
-                np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)]),
-                np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)])
-            ),
-            'ee_twist': (
-                -5e1*np.ones(6),                           
-                5e1*np.ones(6)
-            ),
-            'ee_force_torque': (
-                np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)]),
-                np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)])
-            ),
             'cart_tf': (
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)]),
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)])
@@ -107,6 +115,8 @@ class SingleRobotPyBulletEnv(gym.Env):
                 np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)])
             )
         }
+
+        # Definition of the observation space vector
         observation_space_range_min = []
         observation_space_range_max = []
         for state in self._env_config['robot']['observation_space']['type_list']:
@@ -173,15 +183,29 @@ class SingleRobotPyBulletEnv(gym.Env):
     def reset(self):
         self._sim.reset()
         self._sample_random_objects()
+        self._sample_random_tool()
         self._sample_random_robot_state()
-        
+    
+    @abstractmethod
     def render(self, mode: str = 'human', close: bool = False):
         pass
 
+    @abstractmethod
     def step(self, action: np.ndarray):
         pass
         # done = False
-        # assert self.action_space.contains(action), "Invalid Action"
+        # 
+    
+    def _take_action_vector(self, action: np.ndarray):
+        assert self.action_space.contains(np.asarray(action, np.float32)), "Invalid Action"
+        if 'ee' in self._controller_type:
+            if self._controller_type == "ee_tf":
+                action = vec2SE3(action)
+            setattr(self._target_motion.ee_state , self._controller_type.replace("ee_", ""), action)
+        else:
+            setattr(self._target_motion.joint_state , self._controller_type, action)
+        
+        self._action_robot_controller.send_control_to_robot(self._target_motion)
 
     def _sample_random_objects(self):
         for object_name in self._env_config['world']['world_objects']:
@@ -198,6 +222,18 @@ class SingleRobotPyBulletEnv(gym.Env):
                 save = object_config['save'],
                 scale_size = object_config['scale_size']
             )
+    
+    def _sample_random_tool(self):
+        tool_config = self._env_config['robot']['tool']
+        if isinstance(tool_config, list):
+            new_tool_config = self._np_random.choice(tool_config)
+            self._robot.connect_tool(
+                new_tool_config['name'],
+                new_tool_config['urdf_filename'],
+                new_tool_config['root_link'],
+                tf=vec2SE3(new_tool_config['mount_tf'])
+            )
+
     
     def _sample_random_robot_state(self):
         if 'joint_positions' == self._env_config['robot']['init_state']['type']:

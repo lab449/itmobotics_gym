@@ -21,15 +21,21 @@
                 {"type": "joint_positions"},
                 {
                     "type": "cart_tf",
-                    "target_link": "ee_tool",
+                    "target_link": "peg_target_link",
                     "target_model": "robot",
                     "reference_model": "hole",
                     "reference_link": "hole_target_link"
                 }
             ]
+        },
+        "tool":{
+            "name": "peg_round",
+            "root_link": "ee_tool",
+            "urdf_filename": "tests/urdf/peg_round.urdf",
+            "mount_tf": [0.0, 0.0, 0.05, 0.0, 0.0, 0.0]
         }
-
     },
+    
     "world":{
         "world_objects":{
             "table":{
