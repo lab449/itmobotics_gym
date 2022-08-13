@@ -8,12 +8,12 @@
       <contact_erp value="0.0"/> 
     </contact>
     <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="-0.042 -0.042 0"/>
         <mass value="0.1"/>
         <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="-0.042 -0.042 0"/>
       <geometry>
 			  <mesh filename="meshes/hole/hole_round.STL" scale="0.001 0.001 0.001"/>
       </geometry>
@@ -22,7 +22,7 @@
       </material>
     </visual>
     <collision concave="yes">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="-0.042 -0.042 0"/>
       <geometry>
 	 	    <mesh filename="meshes/hole/hole_round.STL" scale="0.001 0.001 0.001"/>
       </geometry>

@@ -271,6 +271,10 @@
                                 "random_tf_variation": {
                                     "$ref": "#/$defs/random_tf_config",
                                     "default": [0.0, 0.0, 0.0, 0.0]
+                                },
+                                "enable_ft":{
+                                    "type":"boolean",
+                                    "default": false
                                 }
                             },
                             "additionalProperties": false,
@@ -283,6 +287,10 @@
         "simulation":{
             "type": "object",
             "properties": {
+                "gui":{
+                    "type": "boolean",
+                    "default": false
+                },
                 "sim_time_scale":{
                     "type": "number",
                     "minimum": 1.0,
@@ -299,11 +307,11 @@
                     "type": "integer",
                     "minimum": 0
                 }
-            }
+            },
+            "additionalProperties": false
         }
             
     },
-    "additionalProperties": false,
     "required": ["robot", "world", "simulation"],
     
     "$defs": {

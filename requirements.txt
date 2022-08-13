@@ -1,2 +1,4 @@
 jsonschema
 gym
+stable-baselines3[mpi]
+itmobotics-sim

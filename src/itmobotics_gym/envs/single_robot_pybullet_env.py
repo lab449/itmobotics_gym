@@ -60,11 +60,14 @@ class SingleRobotPyBulletEnv(gym.Env):
         with open('src/itmobotics_gym/envs/single_env_config_schema.json') as json_file:
             env_schema = json.load(json_file)
             DefaultValidatingDraft7Validator(env_schema).validate(self._env_config)
+        
+        gui_mode = GUI_MODE.SIMPLE_GUI if env_config['simulation']['gui'] else GUI_MODE.DIRECT
 
         self._sim = PyBulletWorld(
             self._env_config['world']['urdf_filename'], 
-            gui_mode = GUI_MODE.SIMPLE_GUI, 
-            time_step = self._env_config['simulation']['time_step']
+            gui_mode, 
+            time_step = self._env_config['simulation']['time_step'],
+            time_scale = self._env_config['simulation']['sim_time_scale']
         )
         self._robot = PyBulletRobot(
             self._env_config['robot']['urdf_filename'], 
@@ -104,15 +107,15 @@ class SingleRobotPyBulletEnv(gym.Env):
             'joint_torques': self._robot.joint_limits.limit_torques,
             'cart_tf': (
                 np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)]),
-                np.concatenate([-1e1*np.ones(3), -6.28*np.ones(3)])
+                np.concatenate([1e1*np.ones(3), 6.28*np.ones(3)])
             ),
             'cart_twist': (
-                -5e1*np.ones(6),                           
-                5e1*np.ones(6)
+                -5e2*np.ones(6),                           
+                5e2*np.ones(6)
             ),
             'cart_force_torque': (
-                np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)]),
-                np.concatenate([-1e2*np.ones(3), 1e-2*np.ones(3)])
+                np.concatenate([-1e6*np.ones(3), -1e4*np.ones(3)]),
+                np.concatenate([1e6*np.ones(3), 1e4*np.ones(3)])
             )
         }
 
@@ -127,12 +130,12 @@ class SingleRobotPyBulletEnv(gym.Env):
             observation_space_range_max.append(self._state_references[state['type']][1])
 
         self.observation_space = gym.spaces.box.Box(
-            low=np.array(np.array(observation_space_range_min), dtype=np.float32),
-            high=np.array(np.array(observation_space_range_max), dtype=np.float32))
-        
+            low=np.array(observation_space_range_min, dtype=np.float32).flatten(),
+            high=np.array(observation_space_range_max, dtype=np.float32).flatten()
+        )
         self.reset()
     
-    def get_observation_state_as_vec(self) -> np.ndarray:
+    def observation_state_as_vec(self) -> np.ndarray:
         full_state_vector = np.array([])
         try:
             for state_type in self._env_config['robot']['observation_space']['type_list']:
@@ -151,9 +154,12 @@ class SingleRobotPyBulletEnv(gym.Env):
                     raise RuntimeError('Unknown observation state type with name')
                 if 'tf' in state_type['type']:
                     part_of_state = SE32vec(part_of_state)
-                full_state_vector = np.concatenate((full_state_vector, part_of_state))
+                full_state_vector = np.concatenate([full_state_vector, part_of_state])
         except AttributeError:
             raise AttributeError('Unknown observation state type with name: {:s}'.format(state_type['type']))
+        
+        full_state_vector = np.asarray(full_state_vector, dtype=np.float32)
+        assert self.observation_space.contains(full_state_vector), "Given observation state:\n {:s}\n is out of range of the limits:\n {:s}\n".format(str(full_state_vector), str(self.observation_space))
         return full_state_vector
     
     def _sample_random_tf(self, init_tf: np.ndarray, random_variation: np.ndarray) -> SO3:
@@ -180,11 +186,14 @@ class SingleRobotPyBulletEnv(gym.Env):
         print("Set Seed = %d"%seed)
         self._np_random, self._seed = seeding.np_random(seed)
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
         self._sim.reset()
         self._sample_random_objects()
         self._sample_random_tool()
         self._sample_random_robot_state()
+        obs = self.observation_state_as_vec()
+        # print(obs)
+        return obs
     
     @abstractmethod
     def render(self, mode: str = 'human', close: bool = False):
@@ -197,7 +206,8 @@ class SingleRobotPyBulletEnv(gym.Env):
         # 
     
     def _take_action_vector(self, action: np.ndarray):
-        assert self.action_space.contains(np.asarray(action, np.float32)), "Invalid Action"
+        action = np.asarray(action, np.float32)
+        assert self.action_space.contains(action), "Given action state is out of range of the limits"
         if 'ee' in self._controller_type:
             if self._controller_type == "ee_tf":
                 action = vec2SE3(action)

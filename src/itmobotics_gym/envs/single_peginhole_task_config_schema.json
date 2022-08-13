@@ -10,36 +10,65 @@
                 "peg": {
                     "type":"object",
                     "properties": {
-                        "tool_name": {
+                        "model_name": {
+                            "type": "string"
+                        },
+                        "target_link":{
                             "type": "string"
                         }
                     },
-                    "required": ["tool_name"]
+                    "required": ["model_name", "target_link"]
                 },
                 "hole": {
                     "type":"object",
                     "properties": {
-                        "object_name": {
+                        "model_name": {
+                            "type": "string"
+                        },
+                        "target_link":{
                             "type": "string"
                         }
                     },
-                    "required": ["object_name"]
+                    "required": ["model_name", "target_link"]
                 },
-                "complete_task_pose_tolerance":{
-                    "type": "number",
-                    "default": 1e-3
-                },
-                "terminate_force_torque":{
-                    "type": "array",
-                    "items":{
-                        "type": "number"
+                "termination":{
+                    "type": "object",
+                    "properties": {
+                        "max_time":{
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "force_torque":{
+                            "type": "object",
+                            "properties": {
+                                "limits":{
+                                    "type": "array",
+                                    "items":{
+                                        "type": "number",
+                                        "minimum": 0.0
+                                    },
+                                    "minItems": 6,
+                                    "maxItems": 6,
+                                    "default": [1e3, 1e3, 1e3, 1e1, 1e1, 1e1]
+                                },
+                                "target_link":{
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["target_link"]
+                        },
+                        "complete_pose_tolerance":{
+                            "type": "number",
+                            "minimum": 1e-6,
+                            "default": 3e-3
+                        }
                     },
-                    "minItems": 6,
-                    "maxItems": 6,
-                    "default": [1e3, 1e3, 1e3, 1e1, 1e1, 1e1]
+                    "additionalProperties": false,
+                    "required":[ "force_torque"]
                 }
             },
-            "required": ["peg", "hole", "complete_task_pose_tolerance", "terminate_force_torque"]
+            "required": ["peg", "hole", "termination"]
         }
     },
     "required": ["task"]
