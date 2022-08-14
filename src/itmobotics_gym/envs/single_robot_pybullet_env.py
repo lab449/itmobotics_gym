@@ -64,7 +64,6 @@ class SingleRobotPyBulletEnv(gym.Env):
         gui_mode = GUI_MODE.SIMPLE_GUI if env_config['simulation']['gui'] else GUI_MODE.DIRECT
 
         self._sim = PyBulletWorld(
-            self._env_config['world']['urdf_filename'], 
             gui_mode, 
             time_step = self._env_config['simulation']['time_step'],
             time_scale = self._env_config['simulation']['sim_time_scale']

@@ -22,9 +22,11 @@ class SinglePegInHole(SingleRobotPyBulletEnv):
 
     
     def step(self, action: np.ndarray):
-        # Downgrade reward value depends on time
+
         done = False
-        reward = -1.0
+
+        # Downgrade reward value depends on time
+        reward = -0.001
 
         self._take_action_vector(action)
         self._sim.sim_step()
@@ -41,17 +43,17 @@ class SinglePegInHole(SingleRobotPyBulletEnv):
 
         ft_config = self._env_config['task']['termination']['force_torque']
         current_force_torque = self._robot.ee_state(ft_config['target_link']).force_torque
-
-        reward -= np.linalg.norm(current_force_torque)/np.linalg.norm(self._state_references['cart_force_torque'][1][:3])
-        reward -= peg_hole_distance/np.linalg.norm(self._state_references['cart_tf'][1][:3])
         
         if np.any(np.abs(current_force_torque) > np.asarray(ft_config['limits'])):
             done = True
         if peg_hole_distance < self._env_config['task']['termination']['complete_pose_tolerance']:
-            reward += 10.0
+            reward += 1000.0
             done = True
         if self._sim.sim_time > self._env_config['task']['termination']['max_time']:
-            done = True            
+            done = True
+
+        reward -= 1000*np.linalg.norm(current_force_torque)/np.linalg.norm(self._state_references['cart_force_torque'][1][:3])
+        reward -= 1000*peg_hole_distance/np.linalg.norm(self._state_references['cart_tf'][1][:3])            
         
         info = {'peg_hole_distance': peg_hole_distance, 'force_torque': current_force_torque, 'sim_time': self._sim.sim_time}
         return obs, reward, done, info

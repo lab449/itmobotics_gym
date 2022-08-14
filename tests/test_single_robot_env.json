@@ -57,5 +57,7 @@
             }
         }
     },
-    "simulation": {}
+    "simulation": {
+        "gui": true
+    }
 }

@@ -240,10 +240,6 @@
         "world":{
             "type": "object",
             "properties":{
-                "urdf_filename": {
-                    "type": "string",
-                    "default": "plane.urdf"
-                },
                 "world_objects":{
                     "type": "object",
                     "patternProperties": {
@@ -282,7 +278,9 @@
                         }
                     }
                 }
-            }
+            },
+            "additionalProperties": false,
+            "required": ["world_objects"]
         },
         "simulation":{
             "type": "object",
