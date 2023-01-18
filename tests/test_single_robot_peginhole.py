@@ -12,13 +12,13 @@ from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckA
 
 class testSingleRobotPegInHoleEnv(unittest.TestCase):
     def setUp(self):
-        with open('tests/test_single_robot_peginhole.json') as json_file:
+        with open('tests/test_single_robot_peginhole.json', encoding='UTF-8') as json_file:
             self.__env_config = json.load(json_file)
 
         self.__env = SinglePegInHole(self.__env_config)
         time.sleep(5.0)
         check_env(self.__env)
-    
+
     @unittest.skip
     def test_sim(self):
         number_of_epoch = 10
@@ -29,7 +29,7 @@ class testSingleRobotPegInHoleEnv(unittest.TestCase):
                 obs, reward, done, info = self.__env.step(action)
             print(info)
             self.__env.reset()
-    
+
     @unittest.skip
     def test_trained_model(self):
         model = DDPG.load('ddpg_peginhole1', env=self.__env)
@@ -42,7 +42,7 @@ class testSingleRobotPegInHoleEnv(unittest.TestCase):
                 print(reward)
                 self.__env.render()
                 time.sleep(0.1)
-            
+
     def test_learn(self):
         n_actions = self.__env.action_space.shape[-1]
         action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
@@ -53,11 +53,10 @@ class testSingleRobotPegInHoleEnv(unittest.TestCase):
             model.learn(total_timesteps=100000, tb_log_name="ddpg")
             model.save("ddpg_peginhole" + str(i))
         del model # remove to demonstrate saving and loading
-        
-            
-                
+
 def main():
     unittest.main(exit=False)
 
 if __name__ == "__main__":
     main()
+    

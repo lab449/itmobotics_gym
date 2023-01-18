@@ -1,5 +1,7 @@
 jsonschema
+tqdm
 gym
 stable-baselines3[mpi]
+tensorboard
 itmobotics-sim
 pytest

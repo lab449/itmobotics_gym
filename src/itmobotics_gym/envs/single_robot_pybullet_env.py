@@ -60,20 +60,18 @@ class SingleRobotPyBulletEnv(gym.Env):
         with open('src/itmobotics_gym/envs/single_env_config_schema.json') as json_file:
             env_schema = json.load(json_file)
             DefaultValidatingDraft7Validator(env_schema).validate(self._env_config)
-        
+
         gui_mode = GUI_MODE.SIMPLE_GUI if env_config['simulation']['gui'] else GUI_MODE.DIRECT
 
         self._sim = PyBulletWorld(
-            gui_mode, 
+            gui_mode,
             time_step = self._env_config['simulation']['time_step'],
             time_scale = self._env_config['simulation']['sim_time_scale']
         )
-        self._robot = PyBulletRobot(
-            self._env_config['robot']['urdf_filename'], 
-            vec2SE3(np.array(self._env_config['robot']['mount_tf']))
-        )
 
-        self._sim.add_robot(self._robot, name=self._env_config['robot']['name'])
+        self._robot = self._sim.add_robot(self._env_config['robot']['urdf_filename'],
+                                         vec2SE3(np.array(self._env_config['robot']['mount_tf'])),
+                                         self._env_config['robot']['name'])
 
         tool_config = self._env_config['robot']['tool']
         if isinstance(tool_config, dict):
@@ -82,7 +80,7 @@ class SingleRobotPyBulletEnv(gym.Env):
                 tool_config['urdf_filename'],
                 tool_config['root_link'],
                 tf=vec2SE3(tool_config['mount_tf']),
-                save=True
+                save=False
             )
 
         if 'random_seed' in self._env_config['simulation']:
