@@ -1,0 +1,285 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "https://example.com/employee.schema.json",
+    "description": "Scheme for verification enviroment config",
+    "type": "object",
+    "properties": {
+        "robot":{
+            "type": "object",
+            "properties": {
+                "name":{
+                    "type": "string"
+                },
+                "urdf_filename": {
+                    "type": "string"
+                },
+                "mount_tf": {
+                    "$ref": "#/$defs/tf_config"
+                },
+                "init_state":{
+                    "oneOf":[
+                        {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "pattern": "joint_positions"
+                                },
+                                "value":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                },
+                                "random_variation": {
+                                    "type": "array",
+                                    "items":{
+                                        "type": "number"
+                                    },
+                                    "default": [0.0]
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["type", "value"]
+                        }
+                    ]
+                },
+                "action_space":{
+                    "oneOf":[
+                        {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "pattern": "joint"
+                                },
+                                "range_min":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                },
+                                "range_max":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["type", "range_min", "range_max"]
+                        }
+                    ]
+                },
+                "observation_space":{
+                    "type": "object",
+                    "properties": {
+                        "type_list":{
+                            "type": "array",
+                            "items": {
+                                "anyOf":[
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "pattern": "joint"
+                                            }
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["type"]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "pattern": "cart"
+                                            },
+                                            "target_model":{
+                                                "type": "string"
+                                            },
+                                            "target_link": {
+                                                "type": "string"                                        
+                                            },
+                                            "reference_model": {
+                                                "type": "string",
+                                                "default": ""                                 
+                                            },
+                                            "reference_link": {
+                                                "type": "string",
+                                                "default": "world"                                    
+                                            }
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["type", "target_link", "target_model"]
+                                    }
+                                ]
+                            },
+                            "default": [
+                                {
+                                    "type": "joint_positions"
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["type_list"]
+                    
+                },
+                "tool":{
+                    "oneOf":[
+                        {
+                            "type": "object",
+                            "properties": {
+                                "name":{
+                                    "type": "string"
+                                },
+                                "root_link": {
+                                    "type": "string"
+                                },
+                                "urdf_filename": {
+                                    "type": "string"
+                                },
+                                "mount_tf": {
+                                    "$ref": "#/$defs/tf_config",
+                                    "default": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["name", "root_link", "urdf_filename", "mount_tf"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "name":{
+                                    "type": "string"
+                                },
+                                "random_tool":{
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name":{
+                                                "type": "string"
+                                            },
+                                            "root_link": {
+                                                "type": "string"
+                                            },
+                                            "urdf_filename": {
+                                                "type": "string"
+                                            },
+                                            "mount_tf": {
+                                                "$ref": "#/$defs/tf_config",
+                                                "default": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                                            }
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["name", "root_link", "urdf_filename", "mount_tf"]
+                                    }
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["name", "random_tool"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["name", "urdf_filename", "mount_tf",  "init_state", "action_space", "observation_space"]
+        },
+        "world":{
+            "type": "object",
+            "properties":{
+                "world_objects":{
+                    "type": "object",
+                    "patternProperties": {
+                        "(.*?)":{
+                            "type": "object",
+                            "properties": {
+                                "fixed":{
+                                    "type":"boolean",
+                                    "default": true
+                                },
+                                "save":{
+                                    "type":"boolean",
+                                    "default": false
+                                },
+                                "urdf_filename": {
+                                    "type": "string"
+                                },
+                                "init_tf": {
+                                    "$ref": "#/$defs/tf_config"
+                                },
+                                "scale_size":{
+                                    "type": "number",
+                                    "default": 1.0
+                                },
+                                "random_tf_variation": {
+                                    "$ref": "#/$defs/random_tf_config",
+                                    "default": [0.0, 0.0, 0.0, 0.0]
+                                },
+                                "enable_ft":{
+                                    "type":"boolean",
+                                    "default": false
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["urdf_filename", "init_tf"]
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false,
+            "required": ["world_objects"]
+        },
+        "simulation":{
+            "type": "object",
+            "properties": {
+                "gui":{
+                    "type": "boolean",
+                    "default": false
+                },
+                "sim_time_scale":{
+                    "type": "number",
+                    "minimum": 1.0,
+                    "maximum": 1000.0,
+                    "default": 1.0
+                },
+                "time_step":{
+                    "type": "number",
+                    "minimum": 1e-6,
+                    "maximum": 1e-1,
+                    "default": 1e-2
+                },
+                "random_seed":{
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "additionalProperties": false
+        }
+            
+    },
+    "required": ["robot", "world", "simulation"],
+    
+    "$defs": {
+        "random_tf_config": {
+            "type": "array",
+            "items":{
+                "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+        },
+        "tf_config": {
+            "type": "array",
+            "items":{
+                "type": "number"
+            },
+            "minItems": 6,
+            "maxItems": 6
+        }
+    }
+}
+

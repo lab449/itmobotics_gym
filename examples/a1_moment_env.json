@@ -1,0 +1,36 @@
+{
+    "robot":{
+        "name": "a1",
+        "urdf_filename": "a1/a1.urdf",
+        "mount_tf": [0.0, 0.0, 0.4, 0.0, 0.0, 0],
+        "init_state": {
+            "type": "joint_positions",
+            "value": [0.0, 0.9, -1.8, 0.0, 0.9, -1.8, 0.0, 0.9, -1.8, 0.0, 0.9, -1.8],
+            "random_variation": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        },
+        "action_space": {
+            "type":"joint_torques",
+            "range_min": [-20.0, -55.0, -55.0, -20.0, -55.0, -55.0, -20.0, -55.0, -55.0, -20.0, -55.0, -55.0],
+            "range_max": [20.0, 55.0, 55.0, 20.0, 55.0, 55.0, 20.0, 55.0, 55.0, 20.0, 55.0, 55.0]
+        },
+        "observation_space": {
+            "type_list":[
+                {"type": "joint_positions"}
+            ]
+        }
+    },
+    "world":{
+        "world_objects":{
+            "plane":{
+                "urdf_filename": "plane.urdf",
+                "init_tf": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "save": false
+            }
+        }
+    },
+    "simulation": {
+        "gui": true,
+        "time_step": 0.001,
+       "sim_time_scale": 1
+    }
+}
