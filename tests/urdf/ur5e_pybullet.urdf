@@ -361,4 +361,17 @@
     <child link="ee_tool"/>
     <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.0"/>
   </joint>
+
+  <link name="camera_link">
+    <inertial>
+      <mass value="0"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.01"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+  <joint name="camera_link_joint" type="fixed">
+    <parent link="tool0"/>
+    <child link="camera_link"/>
+    <origin rpy="-0.1 0.0 0.0" xyz="0.00 -0.08 0.0"/>
+  </joint>
 </robot>

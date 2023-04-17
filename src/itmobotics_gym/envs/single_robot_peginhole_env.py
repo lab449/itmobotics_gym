@@ -31,7 +31,7 @@ class SinglePegInHole(SingleRobotPyBulletEnv):
         self._take_action_vector(action)
         self._sim.sim_step()
 
-        obs = self.observation_state_as_vec()
+        obs = self.observation_state_as_dict()
 
         peg_in_hole_state = self._sim.link_state(
             self._env_config['task']['peg']['model_name'],
