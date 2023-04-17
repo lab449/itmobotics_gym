@@ -25,7 +25,7 @@ setuptools.setup(
     include_package_data=True,
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    package_data={"": ["README.md", "LICENSE.txt", "*.json", "src/itmobotics_gym/envs.json"]},
+    package_data={"": ["README.md", "LICENSE.txt", "*.json", "src/itmobotics_gym/envs/*.json"]},
     install_requires=[
         "numpy >=1.20.0",
         "gym",
