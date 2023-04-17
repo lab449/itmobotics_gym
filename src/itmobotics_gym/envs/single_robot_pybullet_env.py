@@ -4,6 +4,7 @@ import os
 import sys
 import time
 from unicodedata import name
+import pkg_resources
 
 import gym
 from gym.utils import seeding
@@ -57,7 +58,7 @@ class SingleRobotPyBulletEnv(gym.Env):
     def __init__(self, env_config: dict):
         super(SingleRobotPyBulletEnv, self).__init__()
         self._env_config = env_config
-        with open('src/itmobotics_gym/envs/single_env_config_schema.json') as json_file:
+        with open(pkg_resources.resource_filename(__name__,'single_env_config_schema.json')) as json_file:
             env_schema = json.load(json_file)
             DefaultValidatingDraft7Validator(env_schema).validate(self._env_config)
 

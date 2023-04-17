@@ -10,13 +10,14 @@ from spatialmath import base as sb
 
 import json
 import jsonschema
+import pkg_resources
 
 class SinglePegInHole(SingleRobotPyBulletEnv):
 
     def __init__(self, config: dict):
         super().__init__(config)
 
-        with open('src/itmobotics_gym/envs/single_peginhole_task_config_schema.json') as json_file:
+        with open(pkg_resources.resource_filename(__name__,'single_peginhole_task_config_schema.json')) as json_file:
             task_schema = json.load(json_file)
             DefaultValidatingDraft7Validator(task_schema).validate(self._env_config)
 
