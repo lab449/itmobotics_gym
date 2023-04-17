@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='itmobotics_gym',
-    version='0.0.1',
+    version='0.0.2',
     author='TexnoMann',
     author_email='texnoman@itmo.ru',
     description='Package with gym enviroments from ITMO Robotics Lab',
@@ -25,7 +25,7 @@ setuptools.setup(
     include_package_data=True,
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    package_data={"": ["README.md", "LICENSE.txt", "*.json"]},
+    package_data={"": ["README.md", "LICENSE.txt", "*.json", "src/itmobotics_gym/envs.json"]},
     install_requires=[
         "numpy >=1.20.0",
         "gym",
