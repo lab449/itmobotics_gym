@@ -195,7 +195,6 @@ class SingleRobotPyBulletEnv(gym.Env):
     def seed(self):
         return self._seed
 
-
     @seed.setter
     def seed(self, seed: int):
         print("Set Seed = %d"%seed)
