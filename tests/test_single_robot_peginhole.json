@@ -67,5 +67,21 @@
             "resolution": [1024, 1024],
             "fov": 1000.0
         }
+    },
+    "task": {
+        "peg": {
+            "model_name": "robot",
+            "target_link": "peg_target_link" 
+        },
+        "hole": {
+            "model_name": "hole",
+            "target_link": "hole_target_link"
+        },
+        "termination":{
+            "max_time": 20.0,
+            "force_torque": {
+                "target_link": "peg_link"
+            }
+        }
     }
 }
