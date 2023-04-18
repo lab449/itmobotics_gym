@@ -247,7 +247,14 @@ class SingleRobotPyBulletEnv(gym.Env):
             aspect = pixelHeight / pixelWidth
             projectionMatrix = p.computeProjectionMatrixFOV(self.__render_config['fov'], aspect, nearPlane, farPlane)
                 
-            color, _, _ = p.getCameraImage(pixelWidth, pixelHeight,viewMatrix,projectionMatrix)[2:5]
+            color, _, _ = p.getCameraImage(
+                pixelWidth,
+                pixelHeight,
+                viewMatrix,
+                projectionMatrix,
+                renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                flags=p.ER_NO_SEGMENTATION_MASK
+            )[2:5]
             color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3]
         return color
 
