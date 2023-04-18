@@ -63,6 +63,9 @@ class SingleRobotPyBulletEnv(gym.Env):
             DefaultValidatingDraft7Validator(env_schema).validate(self._env_config)
 
         gui_mode = GUI_MODE.SIMPLE_GUI if env_config['simulation']['gui'] else GUI_MODE.DIRECT
+        self.__render_config = None
+        if 'render' in env_config['simulation']:
+            self.__render_config = env_config['simulation']['render']
 
         self._sim = PyBulletWorld(
             gui_mode,
@@ -209,9 +212,44 @@ class SingleRobotPyBulletEnv(gym.Env):
         # print(obs)
         return obs
     
+        # pixelWidth = 640
+        # pixelHeight = 640
+        # color = np.zeros((pixelWidth,pixelHeight,3))
+        # if not self.__render_config is None:
+        #     pixelWidth = self.__render_config['resolution'][1]
+        #     pixelHeight = self.__render_config['resolution'][0]
+        #     nearPlane = 0.001
+        #     farPlane = 5.0
+        #     viewMatrix = vec2SE3(self.__render_config['view_cam_tf']).A
+        #     print(viewMatrix)
+        #     viewMatrix = viewMatrix.flatten()
+        #     aspect = pixelHeight / pixelWidth
+        #     projectionMatrix = p.computeProjectionMatrixFOV(self.__render_config['fov'], aspect, nearPlane, farPlane)
+                
+        #     color, _, _ = p.getCameraImage(self.__render_config['resolution'][1],self.__render_config['resolution'][0], viewMatrix, projectionMatrix)[2:5]
+        #     color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3]
+
     @abstractmethod
     def render(self, mode: str = 'human', close: bool = False):
-        pass
+        pixelWidth = 640
+        pixelHeight = 640
+        color = np.zeros((pixelWidth,pixelHeight,3))
+        if not self.__render_config is None:
+            pixelWidth = self.__render_config['resolution'][1]
+            pixelHeight = self.__render_config['resolution'][0]
+            nearPlane = 0.001
+            farPlane = 100
+            camera_position = [1.0, 0.4, 1.2]
+            up_vector = [0, 0, -1]
+            target = [0, 0, 0]
+            viewMatrix = p.computeViewMatrix(camera_position, target, up_vector)
+            # print(viewMatrix)
+            aspect = pixelHeight / pixelWidth
+            projectionMatrix = p.computeProjectionMatrixFOV(self.__render_config['fov'], aspect, nearPlane, farPlane)
+                
+            color, _, _ = p.getCameraImage(pixelWidth, pixelHeight,viewMatrix,projectionMatrix)[2:5]
+            color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3]
+        return color
 
     @abstractmethod
     def step(self, action: np.ndarray):

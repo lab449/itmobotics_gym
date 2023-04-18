@@ -61,6 +61,11 @@
         }
     },
     "simulation": {
-        "gui": true
+        "gui": true,
+        "render": {
+            "view_cam_tf": [0, 0, 5.0, 0, 3.14, 0.0],
+            "resolution": [1024, 1024],
+            "fov": 1000.0
+        }
     }
 }

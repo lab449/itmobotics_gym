@@ -30,7 +30,7 @@ class testSingleRobotPyBulletEnv(unittest.TestCase):
             self.__env.step(random_action)
             img = full_state[0]
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            cv2.imshow('out', img_rgb)
+            cv2.imshow('out', self.__env.render())
             cv2.waitKey(1)
 
 def main():
