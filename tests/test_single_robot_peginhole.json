@@ -82,6 +82,7 @@
             "force_torque": {
                 "target_link": "peg_link"
             }
-        }
+        },
+        "control_loop_dt": 0.033
     }
 }

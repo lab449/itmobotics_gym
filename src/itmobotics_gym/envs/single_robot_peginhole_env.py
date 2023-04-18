@@ -30,7 +30,8 @@ class SinglePegInHole(SingleRobotPyBulletEnv):
         reward = -0.001
 
         self._take_action_vector(action)
-        self._sim.sim_step()
+        for _ in range(0, int(self._env_config['task']['control_loop_dt'])/self._sim.time_step):
+            self._sim.sim_step()
 
         obs = self.observation_state_as_tuple()
 
