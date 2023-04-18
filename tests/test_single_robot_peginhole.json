@@ -1,7 +1,7 @@
 {
     "robot":{
         "name": "robot",
-        "urdf_filename": "tests/urdf/ur5e_pybullet.urdf",
+        "urdf_filename": "itmobotics_gym/tests/urdf/ur5e_pybullet.urdf",
         "mount_tf": [0.0, 0.0, 0.625, 0.0, 0.0, 3.1415],
         "init_state": {
             "type": "ee_tf",
@@ -40,7 +40,7 @@
         "tool":{
             "name": "peg_round",
             "root_link": "ee_tool",
-            "urdf_filename": "tests/urdf/peg_round.urdf",
+            "urdf_filename": "itmobotics_gym/tests/urdf/peg_round.urdf",
             "mount_tf": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         }
     },
@@ -48,12 +48,12 @@
     "world":{
         "world_objects":{
             "table":{
-                "urdf_filename": "tests/urdf/table.urdf",
+                "urdf_filename": "itmobotics_gym/tests/urdf/table.urdf",
                 "init_tf": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 "save": true
             },
             "hole":{
-                "urdf_filename": "tests/urdf/hole_round.urdf",
+                "urdf_filename": "itmobotics_gym/tests/urdf/hole_round.urdf",
                 "init_tf": [0.3, 0.1, 0.625, 0.0, 0.0, 0.0],
                 "random_tf_variation": [0.05, 0.05, 0.0, 0.0],
                 "save": false
@@ -61,7 +61,7 @@
         }
     },
     "simulation": {
-        "gui": true,
+        "gui": false,
         "render": {
             "view_cam_tf": [0, 0, 5.0, 0, 3.14, 0.0],
             "resolution": [1024, 1024],
