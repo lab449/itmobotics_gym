@@ -18,6 +18,7 @@ from itmobotics_sim.utils.robot import EEState, JointState, Motion
 from itmobotics_sim.pybullet_env.pybullet_world import PyBulletWorld, GUI_MODE
 from itmobotics_sim.pybullet_env.pybullet_robot import PyBulletRobot
 from itmobotics_sim.utils.math import vec2SE3, SE32vec
+from itmobotics_gym.data import get_data_path
 import itmobotics_sim.utils.controllers as ctrl
 
 from spatialmath import SE3, SO3, Twist3
@@ -73,6 +74,8 @@ class SingleRobotPyBulletEnv(gym.Env):
             time_scale = self._env_config['simulation']['sim_time_scale']
         )
 
+        self._sim.add_additional_search_path(get_data_path())
+
         self._robot = self._sim.add_robot(self._env_config['robot']['urdf_filename'],
                                          vec2SE3(np.array(self._env_config['robot']['mount_tf'])),
                                          self._env_config['robot']['name'])
@@ -88,9 +91,9 @@ class SingleRobotPyBulletEnv(gym.Env):
             )
 
         if 'random_seed' in self._env_config['simulation']:
-            self._np_random, self._seed = seeding.np_random(self._env_config['simulation']['random_seed'])
+            self._np_random, seed = seeding.np_random(self._env_config['simulation']['random_seed'])
         else:
-            self._np_random, self._seed = seeding.np_random(int(time.time()))
+            self._np_random, seed = seeding.np_random(int(time.time()))
 
         # Definition of the action space vector
         self._controller_type = self._env_config['robot']['action_space']['type']
@@ -178,7 +181,7 @@ class SingleRobotPyBulletEnv(gym.Env):
             raise AttributeError('Unknown observation state type with name: {:s}'.format(state['type']))
         assert self.observation_space.contains(tuple(full_state)), "Given observation state:\n {:s}\n is out of range of the limits:\n {:s}\n".format(str(full_state), str(self.observation_space))
         return tuple(full_state)
-    
+
     def _sample_random_tf(self, init_tf: np.ndarray, random_variation: np.ndarray) -> SO3:
         pose_variation = (2*self._np_random.random(3) - 1.0)*random_variation[:3]
         random_pose = SE3(*( (init_tf[:3] + pose_variation).tolist()) )
@@ -186,7 +189,7 @@ class SingleRobotPyBulletEnv(gym.Env):
         var_theta = random_variation[3]
         theta_orient_variation = (2*self._np_random.random() - 1.0) * var_theta
         vec_orient_variation = (2*self._np_random.random(3) - 1.0)
-        
+
         orient_variation = SE3(SO3(sb.angvec2r(theta=theta_orient_variation, v=vec_orient_variation), check = False))
         only_rotation_init_tf = init_tf
         only_rotation_init_tf[:3] = 0.0
@@ -194,14 +197,14 @@ class SingleRobotPyBulletEnv(gym.Env):
         random_tf = random_pose @ random_orient
         return random_tf
     
-    @property
-    def seed(self):
-        return self._seed
+    # @property
+    # def seed(self):
+    #     return self._seed
 
-    @seed.setter
-    def seed(self, seed: int):
-        print("Set Seed = %d"%seed)
-        self._np_random, self._seed = seeding.np_random(seed)
+    # @seed.setter
+    # def seed(self, seed: int):
+    #     print("Set Seed = %d"%seed)
+    #     self._np_random, self._seed = seeding.np_random(seed)
 
     def reset(self) -> np.ndarray:
         self._sim.reset()
