@@ -1,3 +1,4 @@
+import os
 import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -25,13 +26,6 @@ setuptools.setup(
     include_package_data=True,
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    package_data={ "": [
-        "README.md", "LICENSE.txt", "*.json", 
-        "src/itmobotics_gym/envs/*.json",
-        "src/itmobotics_gym/envs/models/*.urdf",
-        "src/itmobotics_gym/envs/models/meshes/**"
-        "src/itmobotics_gym/envs/models/meshes/**"
-    ]},
     install_requires=[
         "numpy >=1.20.0",
         "gym",
