@@ -2,6 +2,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# IDE
+.vscode
+.idea
+
+# stable baseline 3
+*tensorboard/
+*.zip
+
 # C extensions
 *.so
 
@@ -46,6 +54,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+tests/urdf
 
 # Translations
 *.mo
