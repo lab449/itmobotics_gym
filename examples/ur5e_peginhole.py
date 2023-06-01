@@ -36,11 +36,11 @@ def main(opt):
             EvalCallback(
                 env,
                 best_model_save_path=opt.log_prefix + "logs/best_model/" + opt.model_name,
-                n_eval_episodes=1,
+                n_eval_episodes=6,
                 log_path=opt.log_prefix + "results/" + opt.model_name,
-                eval_freq=opt.eval_freq,
+                eval_freq=opt.eval_freq // opt.num_cpu,
                 deterministic=True,
-                render=False,
+                render=True,
             )
         )
 
@@ -77,11 +77,11 @@ def parse_opt(known=False):
     parser.add_argument("--sde", action=argparse.BooleanOptionalAction)
     parser.add_argument("--novel", action=argparse.BooleanOptionalAction)
     parser.add_argument("--frame-stack-size", type=int, default=0, help="Num vec frame stack")
-    parser.add_argument("--total-timesteps", type=int, default=1_000_000, help="model.learn total_timesteps")
+    parser.add_argument("--total-timesteps", type=int, default=50_000, help="model.learn total_timesteps")
     parser.add_argument("--batch-size", type=int, default=64, help="total batch size for all GPUs")
     parser.add_argument("--n-step", type=int, default=128, help="PPO n_steps")
 
-    parser.add_argument("--eval-freq", type=int, default=1024, help="eval freq")
+    parser.add_argument("--eval-freq", type=int, default=8192, help="eval freq")
 
     parser.add_argument("--model-name", type=str, default="model", help="model name to save")
     parser.add_argument("--log-prefix", type=str, default="./", help="folder to save logs")
