@@ -282,7 +282,7 @@ class SingleRobotPyBulletEnv(gym.Env):
                 renderer=p.ER_BULLET_HARDWARE_OPENGL,
                 flags=p.ER_NO_SEGMENTATION_MASK
             )[2:5]
-            color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3].astype('uint8')
+            color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., -2::-1].astype('uint8')
         return color
 
     @abstractmethod
@@ -293,7 +293,7 @@ class SingleRobotPyBulletEnv(gym.Env):
     
     def _take_action_vector(self, action: np.ndarray):
         action = np.asarray(action, np.float32)
-        assert self.action_space.contains(action), "Given action state is out of range of the limits"
+        assert self.action_space.contains(action), f"Given action state is out of range of the limits {self.action_space}, {action}"
         if 'ee' in self._controller_type:
             if self._controller_type == "ee_tf":
                 action = vec2SE3(action)
