@@ -260,7 +260,7 @@ class SingleRobotPyBulletEnv(gym.Env):
     def render(self, mode: str = 'human', close: bool = False):
         pixelWidth = 640
         pixelHeight = 640
-        color = np.zeros((pixelWidth,pixelHeight,3))
+        color = np.zeros((pixelWidth, pixelHeight, 3), dtype=np.uint8)
         if not self.__render_config is None:
             pixelWidth = self.__render_config['resolution'][1]
             pixelHeight = self.__render_config['resolution'][0]
@@ -282,7 +282,7 @@ class SingleRobotPyBulletEnv(gym.Env):
                 renderer=p.ER_BULLET_HARDWARE_OPENGL,
                 flags=p.ER_NO_SEGMENTATION_MASK
             )[2:5]
-            color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3]
+            color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3].astype('uint8')
         return color
 
     @abstractmethod
