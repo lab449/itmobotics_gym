@@ -17,12 +17,14 @@ time.sleep(1.0)
 env.reset()
 time.sleep(1.0)
 
-random_action = np.random.uniform(-1, 1, size=6)*0.0
+random_action = np.random.uniform(-1, 1, size=6)
+print(random_action.shape)
 for i in tqdm(range(1000)):
     obs = env.observation_state_as_dict()
     obs_img = obs['camera']
     
     random_action = np.random.uniform(-1, 1, size=6)
+
     env._sim.sim_step()
     env._take_action_vector(random_action)
     cv2.imshow('out', obs_img)
