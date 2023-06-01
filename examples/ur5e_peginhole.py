@@ -40,7 +40,7 @@ def main(opt):
                 log_path=opt.log_prefix + "results/" + opt.model_name,
                 eval_freq=opt.eval_freq // opt.num_cpu,
                 deterministic=True,
-                render=True,
+                render=False,
             )
         )
 
