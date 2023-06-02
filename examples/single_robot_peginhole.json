@@ -2,7 +2,7 @@
     "robot":{
         "name": "robot",
         "urdf_filename": "ur5e_pybullet.urdf",
-        "mount_tf": [0.0, 0.0, 0.625, 0.0, 0.0, 3.1415],
+        "mount_tf": [0.0, 0.0, 0.625, 0.0, 0.0, 0.0],
         "init_state": {
             "type": "ee_tf",
             "value": [0.3, 0.1, 0.785, 3.1415, 0.0, 0.0],
@@ -12,6 +12,7 @@
         "action_space": {
             "type":"ee_twist",
             "target_link": "camera_link",
+            "target_link": "peg_target_link",
             "range_min": [-1.0,  -1.0, -1.0, -1.0, -1.0, -1.0],
             "range_max": [1.0,  1.0, 1.0, 1.0, 1.0, 1.0]
         },
@@ -26,7 +27,9 @@
                 {
                     "type": "cart_tf",
                     "target_link": "camera_link",
-                    "target_model": "robot"
+                    "target_model": "robot",
+                    "reference_model": "hole",
+                    "reference_link": "hole_target_link"
                 },
                 {
                     "type": "cart_force_torque",

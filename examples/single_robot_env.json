@@ -11,7 +11,8 @@
         },
         "action_space": {
             "type":"ee_twist",
-            "target_link": "camera_link",
+            "reference_link": "base_link",
+            "target_link": "peg_target_link",
             "range_min": [-1.0,  -1.0, -1.0, -1.0, -1.0, -1.0],
             "range_max": [1.0,  1.0, 1.0, 1.0, 1.0, 1.0]
         },
