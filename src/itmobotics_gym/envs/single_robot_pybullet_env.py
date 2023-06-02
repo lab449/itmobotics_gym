@@ -97,7 +97,7 @@ class SingleRobotPyBulletEnv(gym.Env):
 
         # Definition of the action space vector
         self._controller_type = self._env_config['robot']['action_space']['type']
-        assert self._controller_type in SingleRobotPyBulletEnv.action_controller_builder, "Unknows controller type {:s}".format(self._controller_type)
+        assert self._controller_type in SingleRobotPyBulletEnv.action_controller_builder, f"Unknows controller type {self._controller_type}"
         self._action_robot_controller = SingleRobotPyBulletEnv.action_controller_builder[self._controller_type](self._robot)
         self.action_space = gym.spaces.box.Box(
             low=np.array(self._env_config['robot']['action_space']['range_min'], dtype=np.float32),
@@ -116,7 +116,7 @@ class SingleRobotPyBulletEnv(gym.Env):
                 np.concatenate([1e1*np.ones(3), 6.28*np.ones(3)])
             ),
             'cart_twist': (
-                -5e2*np.ones(6),                           
+                -5e2*np.ones(6),
                 5e2*np.ones(6)
             ),
             'cart_force_torque': (
@@ -349,4 +349,6 @@ class SingleRobotPyBulletEnv(gym.Env):
                 np.array(self._env_config['robot']['init_state']['random_variation'])
             )
             new_eestate = EEState.from_tf(new_tf, self._env_config['robot']['init_state']['target_link'])
+            new_js = JointState.from_position(np.array([0.0, -1.57, 1.57, 1.57, 1.57, 0.0]))
+            self._robot.reset_joint_state(new_js)
             self._robot.reset_ee_state(new_eestate)

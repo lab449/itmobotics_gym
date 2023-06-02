@@ -326,7 +326,7 @@
                  not corrected wrt the real robot (ie: rotated over 180
                  degrees)
       -->
-    <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="base"/>
     <child link="base_link"/>
   </joint>
