@@ -120,8 +120,8 @@ class SingleRobotPyBulletEnv(gym.Env):
                 5e2*np.ones(6)
             ),
             'cart_force_torque': (
-                np.concatenate([-1e6*np.ones(3), -1e4*np.ones(3)]),
-                np.concatenate([1e6*np.ones(3), 1e4*np.ones(3)])
+                np.concatenate([-1e6*np.ones(3), -1e5*np.ones(3)]),
+                np.concatenate([1e6*np.ones(3), 1e5*np.ones(3)])
             )
         }
 
