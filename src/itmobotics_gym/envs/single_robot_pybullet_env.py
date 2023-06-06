@@ -52,7 +52,7 @@ class SingleRobotPyBulletEnv(gym.Env):
         'joint_positions': ctrl.JointPositionsController,
         'joint_velocities': ctrl.JointVelocitiesController,
         'joint_torques': ctrl.JointTorquesController,
-        'ee_twist': ctrl.EEVelocityToJointVelocityController
+        'ee_twist': ctrl.EELocalVelocityToJointVelocityController
     }
 
 
