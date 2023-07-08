@@ -66,9 +66,13 @@
                     },
                     "additionalProperties": false,
                     "required":[ "force_torque"]
+                },
+                "control_loop_dt":{
+                    "type": "number",
+                    "default": 10.0
                 }
             },
-            "required": ["peg", "hole", "termination"]
+            "required": ["peg", "hole", "termination", "control_loop_dt"]
         }
     },
     "required": ["task"]

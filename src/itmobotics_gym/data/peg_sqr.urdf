@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<robot name="peg_round">
+<robot name="peg_sqr">
   <link name="peg_link">
     <contact>
       <lateral_friction value="1.0"/>
@@ -15,7 +15,7 @@
     <visual>
       <origin rpy="3.14159265359 0 0" xyz="-0.0225 0.0225 0.052"/>
       <geometry>
-			  <mesh filename="meshes/peg/peg_round.STL" scale="0.001 0.001 0.001"/>
+			  <mesh filename="meshes/peg/peg_sqr.STL" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="green">
         <color rgba="0.5 1 0 1"/>
@@ -24,7 +24,7 @@
     <collision>
       <origin rpy="3.14159265359 0 0" xyz="-0.0225 0.0225 0.052"/>
       <geometry>
-	 	    <mesh filename="meshes/peg/peg_round.STL" scale="0.001 0.001 0.001"/>
+	 	    <mesh filename="meshes/peg/peg_sqr.STL" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>

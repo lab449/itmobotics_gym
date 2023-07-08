@@ -1,7 +1,7 @@
 {
     "robot":{
         "name": "robot",
-        "urdf_filename": "itmobotics_gym/tests/urdf/ur5e_pybullet.urdf",
+        "urdf_filename": "ur5e_pybullet.urdf",
         "mount_tf": [0.0, 0.0, 0.625, 0.0, 0.0, 3.1415],
         "init_state": {
             "type": "ee_tf",
@@ -11,6 +11,7 @@
         },
         "action_space": {
             "type":"ee_twist",
+            "reference_link": "base_link",
             "target_link": "camera_link",
             "range_min": [-1.0,  -1.0, -1.0, -1.0, -1.0, -1.0],
             "range_max": [1.0,  1.0, 1.0, 1.0, 1.0, 1.0]
@@ -21,7 +22,7 @@
                     "type": "camera",
                     "name": "cam0",
                     "target_link": "camera_link",
-                    "resolution": [1024, 1280]
+                    "resolution": [240, 320]
                 },
                 {
                     "type": "cart_tf",
@@ -40,7 +41,7 @@
         "tool":{
             "name": "peg_round",
             "root_link": "ee_tool",
-            "urdf_filename": "itmobotics_gym/tests/urdf/peg_round.urdf",
+            "urdf_filename": "peg_round.urdf",
             "mount_tf": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         }
     },
@@ -48,12 +49,12 @@
     "world":{
         "world_objects":{
             "table":{
-                "urdf_filename": "itmobotics_gym/tests/urdf/table.urdf",
+                "urdf_filename": "table.urdf",
                 "init_tf": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 "save": true
             },
             "hole":{
-                "urdf_filename": "itmobotics_gym/tests/urdf/hole_round.urdf",
+                "urdf_filename": "hole_round.urdf",
                 "init_tf": [0.3, 0.1, 0.625, 0.0, 0.0, 0.0],
                 "random_tf_variation": [0.05, 0.05, 0.0, 0.0],
                 "save": false
@@ -61,28 +62,11 @@
         }
     },
     "simulation": {
-        "gui": false,
+        "gui": true,
         "render": {
             "view_cam_tf": [0, 0, 5.0, 0, 3.14, 0.0],
             "resolution": [1024, 1024],
             "fov": 1000.0
         }
-    },
-    "task": {
-        "peg": {
-            "model_name": "robot",
-            "target_link": "peg_target_link" 
-        },
-        "hole": {
-            "model_name": "hole",
-            "target_link": "hole_target_link"
-        },
-        "termination":{
-            "max_time": 20.0,
-            "force_torque": {
-                "target_link": "peg_link"
-            }
-        },
-        "control_loop_dt": 0.033
     }
 }

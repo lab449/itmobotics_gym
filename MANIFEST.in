@@ -1,3 +1,6 @@
-include src/itmobotics_gym/envs/*.json
+global-include *.STL
+global-include *.json
+global-include *.urdf
 include README.md
 include LICENSE.txt
+recursive-include package *

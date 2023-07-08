@@ -4,6 +4,7 @@ import os
 import sys
 import time
 from unicodedata import name
+import pkg_resources
 
 import gym
 from gym.utils import seeding
@@ -17,6 +18,7 @@ from itmobotics_sim.utils.robot import EEState, JointState, Motion
 from itmobotics_sim.pybullet_env.pybullet_world import PyBulletWorld, GUI_MODE
 from itmobotics_sim.pybullet_env.pybullet_robot import PyBulletRobot
 from itmobotics_sim.utils.math import vec2SE3, SE32vec
+from itmobotics_gym.data import get_data_path
 import itmobotics_sim.utils.controllers as ctrl
 
 from spatialmath import SE3, SO3, Twist3
@@ -50,30 +52,33 @@ class SingleRobotPyBulletEnv(gym.Env):
         'joint_positions': ctrl.JointPositionsController,
         'joint_velocities': ctrl.JointVelocitiesController,
         'joint_torques': ctrl.JointTorquesController,
-        'ee_twist': ctrl.EEVelocityToJointVelocityController
+        'ee_twist': ctrl.EELocalVelocityToJointVelocityController
     }
 
 
     def __init__(self, env_config: dict):
         super(SingleRobotPyBulletEnv, self).__init__()
         self._env_config = env_config
-        with open('src/itmobotics_gym/envs/single_env_config_schema.json') as json_file:
+        with open(pkg_resources.resource_filename(__name__,'single_env_config_schema.json')) as json_file:
             env_schema = json.load(json_file)
             DefaultValidatingDraft7Validator(env_schema).validate(self._env_config)
-        
+
         gui_mode = GUI_MODE.SIMPLE_GUI if env_config['simulation']['gui'] else GUI_MODE.DIRECT
+        self.__render_config = None
+        if 'render' in env_config['simulation']:
+            self.__render_config = env_config['simulation']['render']
 
         self._sim = PyBulletWorld(
-            gui_mode, 
+            gui_mode,
             time_step = self._env_config['simulation']['time_step'],
             time_scale = self._env_config['simulation']['sim_time_scale']
         )
-        self._robot = PyBulletRobot(
-            self._env_config['robot']['urdf_filename'], 
-            vec2SE3(np.array(self._env_config['robot']['mount_tf']))
-        )
 
-        self._sim.add_robot(self._robot, name=self._env_config['robot']['name'])
+        self._sim.add_additional_search_path(get_data_path())
+
+        self._robot = self._sim.add_robot(self._env_config['robot']['urdf_filename'],
+                                         vec2SE3(np.array(self._env_config['robot']['mount_tf'])),
+                                         self._env_config['robot']['name'])
 
         tool_config = self._env_config['robot']['tool']
         if isinstance(tool_config, dict):
@@ -86,9 +91,9 @@ class SingleRobotPyBulletEnv(gym.Env):
             )
 
         if 'random_seed' in self._env_config['simulation']:
-            self._np_random, self._seed = seeding.np_random(self._env_config['simulation']['random_seed'])
+            self._np_random, seed = seeding.np_random(self._env_config['simulation']['random_seed'])
         else:
-            self._np_random, self._seed = seeding.np_random(int(time.time()))
+            self._np_random, seed = seeding.np_random(int(time.time()))
 
         # Definition of the action space vector
         self._controller_type = self._env_config['robot']['action_space']['type']
@@ -98,8 +103,10 @@ class SingleRobotPyBulletEnv(gym.Env):
             low=np.array(self._env_config['robot']['action_space']['range_min'], dtype=np.float32),
             high=np.array(self._env_config['robot']['action_space']['range_max'], dtype=np.float32)
         )
+        if not 'target_link' in self._env_config['robot']['action_space']:
+            self._env_config['robot']['action_space']['target_link'] = 'world'
         self._target_motion = Motion(ee_link = self._env_config['robot']['action_space']['target_link'], num_joints = self._robot.num_joints)
-        
+
         self._state_references = {
             'joint_positions': self._robot.joint_limits.limit_positions,
             'joint_velocities': self._robot.joint_limits.limit_velocities,
@@ -113,54 +120,92 @@ class SingleRobotPyBulletEnv(gym.Env):
                 5e2*np.ones(6)
             ),
             'cart_force_torque': (
-                np.concatenate([-1e6*np.ones(3), -1e4*np.ones(3)]),
-                np.concatenate([1e6*np.ones(3), 1e4*np.ones(3)])
+                np.concatenate([-1e6*np.ones(3), -1e5*np.ones(3)]),
+                np.concatenate([1e6*np.ones(3), 1e5*np.ones(3)])
             )
         }
 
         # Definition of the observation space vector
-        observation_space_range_min = []
-        observation_space_range_max = []
+        self.observation_space = {}
         for state in self._env_config['robot']['observation_space']['type_list']:
-            assert state['type'] in self._state_references, "Unknown type for observable state: {:s}, expecten one of this: {:s}".format(
-                state['type'], str(list(self._state_references.keys()))
-            )
-            observation_space_range_min.append(self._state_references[state['type']][0])
-            observation_space_range_max.append(self._state_references[state['type']][1])
+            if 'camera' in state['type']:
+                print("CONNECT CAMERA")
+                self._robot.connect_camera(state['name'], resolution = state['resolution'], link=state['target_link'])
+                self.observation_space['camera'] = gym.spaces.box.Box(
+                    low=0, high=255,
+                    shape=(state['resolution'][0], state['resolution'][1], 3),
+                    dtype=np.uint8
+                )
+            else:
+                assert state['type'] in self._state_references, "Unknown type for observable state: {:s}, expecten one of this: {:s}".format(
+                    state['type'], str(list(self._state_references.keys()))
+                )
+                self.observation_space[state['type']] = gym.spaces.box.Box(
+                    np.array(self._state_references[state['type']][0], dtype=np.float32).flatten(),
+                    np.array(self._state_references[state['type']][1], dtype=np.float32).flatten()
+                )
 
-        self.observation_space = gym.spaces.box.Box(
-            low=np.array(observation_space_range_min, dtype=np.float32).flatten(),
-            high=np.array(observation_space_range_max, dtype=np.float32).flatten()
-        )
+        self.observation_space = gym.spaces.Dict(self.observation_space)
         self.reset()
-    
-    def observation_state_as_vec(self) -> np.ndarray:
-        full_state_vector = np.array([])
+
+    def observation_state_as_tuple(self) -> np.ndarray:
+        full_state = []
         try:
-            for state_type in self._env_config['robot']['observation_space']['type_list']:
+            for state in self._env_config['robot']['observation_space']['type_list']:
                 part_of_state = None
-                if 'joint' in state_type['type']:
-                    part_of_state = getattr(self._robot.joint_state, state_type['type'])
-                elif 'cart' in state_type['type']:
+                if 'joint' in state['type']:
+                    part_of_state = getattr(self._robot.joint_state, state['type'])
+                    full_state.append(np.asarray(part_of_state, dtype=np.float32))
+                elif 'cart' in state['type']:
                     link_state = self._sim.link_state(
-                        state_type['target_model'],
-                        state_type['target_link'],
-                        state_type['reference_model'],
-                        state_type['reference_link']
+                        state['target_model'],
+                        state['target_link'],
+                        state['reference_model'],
+                        state['reference_link']
                     )
-                    part_of_state = getattr(link_state, state_type['type'].replace('cart_', ''))
+                    part_of_state = getattr(link_state, state['type'].replace('cart_', ''))
+                    if 'tf' in state['type']:
+                        part_of_state = SE32vec(part_of_state)
+                    full_state.append(np.asarray(part_of_state, dtype=np.float32))
+                elif 'camera' in state['type']:
+                    part_of_state, _ = self._robot.get_image(state['name'])
+                    full_state.append(np.asarray(part_of_state, dtype=np.uint8))
                 else:
                     raise RuntimeError('Unknown observation state type with name')
-                if 'tf' in state_type['type']:
-                    part_of_state = SE32vec(part_of_state)
-                full_state_vector = np.concatenate([full_state_vector, part_of_state])
         except AttributeError:
-            raise AttributeError('Unknown observation state type with name: {:s}'.format(state_type['type']))
-        
-        full_state_vector = np.asarray(full_state_vector, dtype=np.float32)
-        assert self.observation_space.contains(full_state_vector), "Given observation state:\n {:s}\n is out of range of the limits:\n {:s}\n".format(str(full_state_vector), str(self.observation_space))
-        return full_state_vector
-    
+            raise AttributeError('Unknown observation state type with name: {:s}'.format(state['type']))
+        assert self.observation_space.contains(tuple(full_state)), "Given observation state:\n {:s}\n is out of range of the limits:\n {:s}\n".format(str(full_state), str(self.observation_space))
+        return tuple(full_state)
+
+    def observation_state_as_dict(self) -> dict:
+        full_state = {}
+        try:
+            for state in self._env_config['robot']['observation_space']['type_list']:
+                part_of_state = None
+                if 'joint' in state['type']:
+                    part_of_state = getattr(self._robot.joint_state, state['type'])
+                    full_state[state['type']] = np.asarray(part_of_state, dtype=np.float32)
+                elif 'cart' in state['type']:
+                    link_state = self._sim.link_state(
+                        state['target_model'],
+                        state['target_link'],
+                        state['reference_model'],
+                        state['reference_link']
+                    )
+                    part_of_state = getattr(link_state, state['type'].replace('cart_', ''))
+                    if 'tf' in state['type']:
+                        part_of_state = SE32vec(part_of_state)
+                    full_state[state['type']] = np.asarray(part_of_state, dtype=np.float32)
+                elif 'camera' in state['type']:
+                    part_of_state, _ = self._robot.get_image(state['name'])
+                    full_state[state['type']] = np.asarray(part_of_state, dtype=np.uint8)
+                else:
+                    raise RuntimeError('Unknown observation state type with name')
+        except AttributeError:
+            raise AttributeError('Unknown observation state type with name: {:s}'.format(state['type']))
+        assert self.observation_space.contains(full_state), "Given observation state:\n {:s}\n is out of range of the limits:\n {:s}\n".format(str(full_state), str(self.observation_space))
+        return full_state
+
     def _sample_random_tf(self, init_tf: np.ndarray, random_variation: np.ndarray) -> SO3:
         pose_variation = (2*self._np_random.random(3) - 1.0)*random_variation[:3]
         random_pose = SE3(*( (init_tf[:3] + pose_variation).tolist()) )
@@ -168,7 +213,7 @@ class SingleRobotPyBulletEnv(gym.Env):
         var_theta = random_variation[3]
         theta_orient_variation = (2*self._np_random.random() - 1.0) * var_theta
         vec_orient_variation = (2*self._np_random.random(3) - 1.0)
-        
+
         orient_variation = SE3(SO3(sb.angvec2r(theta=theta_orient_variation, v=vec_orient_variation), check = False))
         only_rotation_init_tf = init_tf
         only_rotation_init_tf[:3] = 0.0
@@ -176,27 +221,69 @@ class SingleRobotPyBulletEnv(gym.Env):
         random_tf = random_pose @ random_orient
         return random_tf
     
-    @property
-    def seed(self):
-        return self._seed
+    # @property
+    # def seed(self):
+    #     return self._seed
 
-    @seed.setter
-    def seed(self, seed: int):
-        print("Set Seed = %d"%seed)
-        self._np_random, self._seed = seeding.np_random(seed)
+    # @seed.setter
+    # def seed(self, seed: int):
+    #     print("Set Seed = %d"%seed)
+    #     self._np_random, self._seed = seeding.np_random(seed)
 
     def reset(self) -> np.ndarray:
         self._sim.reset()
         self._sample_random_objects()
-        self._sample_random_tool()
+        # self._sample_random_tool()
         self._sample_random_robot_state()
-        obs = self.observation_state_as_vec()
+        obs = self.observation_state_as_dict()
         # print(obs)
         return obs
     
+        # pixelWidth = 640
+        # pixelHeight = 640
+        # color = np.zeros((pixelWidth,pixelHeight,3))
+        # if not self.__render_config is None:
+        #     pixelWidth = self.__render_config['resolution'][1]
+        #     pixelHeight = self.__render_config['resolution'][0]
+        #     nearPlane = 0.001
+        #     farPlane = 5.0
+        #     viewMatrix = vec2SE3(self.__render_config['view_cam_tf']).A
+        #     print(viewMatrix)
+        #     viewMatrix = viewMatrix.flatten()
+        #     aspect = pixelHeight / pixelWidth
+        #     projectionMatrix = p.computeProjectionMatrixFOV(self.__render_config['fov'], aspect, nearPlane, farPlane)
+                
+        #     color, _, _ = p.getCameraImage(self.__render_config['resolution'][1],self.__render_config['resolution'][0], viewMatrix, projectionMatrix)[2:5]
+        #     color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., :3]
+
     @abstractmethod
     def render(self, mode: str = 'human', close: bool = False):
-        pass
+        pixelWidth = 640
+        pixelHeight = 640
+        color = np.zeros((pixelWidth, pixelHeight, 3), dtype=np.uint8)
+        if not self.__render_config is None:
+            pixelWidth = self.__render_config['resolution'][1]
+            pixelHeight = self.__render_config['resolution'][0]
+            nearPlane = 0.001
+            farPlane = 100
+            camera_position = [1.0, 0.4, 1.2]
+            up_vector = [0, 0, -1]
+            target = [0, 0, 0]
+            viewMatrix = p.computeViewMatrix(camera_position, target, up_vector)
+            # print(viewMatrix)
+            aspect = pixelHeight / pixelWidth
+            projectionMatrix = p.computeProjectionMatrixFOV(self.__render_config['fov'], aspect, nearPlane, farPlane)
+                
+            color, _, _ = p.getCameraImage(
+                pixelWidth,
+                pixelHeight,
+                viewMatrix,
+                projectionMatrix,
+                renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                flags=p.ER_NO_SEGMENTATION_MASK
+            )[2:5]
+            color = np.reshape(color, (pixelHeight, pixelWidth, 4))[..., -2::-1].astype('uint8')
+        return color
 
     @abstractmethod
     def step(self, action: np.ndarray):
@@ -206,7 +293,7 @@ class SingleRobotPyBulletEnv(gym.Env):
     
     def _take_action_vector(self, action: np.ndarray):
         action = np.asarray(action, np.float32)
-        assert self.action_space.contains(action), "Given action state is out of range of the limits"
+        assert self.action_space.contains(action), f"Given action state is out of range of the limits {self.action_space}, {action}"
         if 'ee' in self._controller_type:
             if self._controller_type == "ee_tf":
                 action = vec2SE3(action)

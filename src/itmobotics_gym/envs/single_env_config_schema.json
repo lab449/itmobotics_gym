@@ -132,6 +132,31 @@
                                         "properties": {
                                             "type": {
                                                 "type": "string",
+                                                "pattern": "cam"
+                                            },
+                                            "name":{
+                                                "type": "string"
+                                            },
+                                            "resolution": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "integer",
+                                                    "minimum": 100,
+                                                    "maximum": 2560
+                                                }
+                                            },
+                                            "target_link":{
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": true,
+                                        "required": ["type", "target_link", "name"]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
                                                 "pattern": "joint"
                                             }
                                         },
@@ -304,6 +329,29 @@
                 "random_seed":{
                     "type": "integer",
                     "minimum": 0
+                },
+                "render":{
+                    "type": "object",
+                    "properties": {
+                        "view_cam_tf":{
+                            "$ref": "#/$defs/tf_config"
+                        },
+                        "resolution": {
+                            "type":"array",
+                            "items": {
+                                "type": "integer",
+                                "minimum": 128,
+                                "maximum": 2056
+                            },
+                            "default" : [1024, 1024]
+                        },
+                        "fov":{
+                            "type": "number",
+                            "minimum": 0.0,
+                            "default":  1000.0
+                        }
+                    },
+                    "required":["view_cam_tf"]
                 }
             },
             "additionalProperties": false
